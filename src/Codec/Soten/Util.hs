@@ -5,6 +5,9 @@ module Codec.Soten.Util (
   -- Exception handling
   , throw
   , DeadlyImporterError(..)
+  -- Util
+  , extract
+  , nothing
 ) where
 
 import           Control.Exception (Exception, throw)
@@ -20,3 +23,14 @@ hasExtention file = elem (map toLower (takeExtension file))
 data DeadlyImporterError = DeadlyImporterError String
     deriving (Show, Typeable)
 instance Exception DeadlyImporterError
+
+nothing :: a -> Maybe a -> Maybe a
+nothing v Nothing  = Just v
+nothing _ a        = a
+
+extract :: (a -> Bool) -> [a] -> (Maybe a, [a])
+extract f = iterExtract []
+  where
+    iterExtract acc []     = (Nothing, acc)
+    iterExtract acc (x:xs) =
+        if f x then (Just x, acc ++ xs) else iterExtract (acc ++ [x]) xs

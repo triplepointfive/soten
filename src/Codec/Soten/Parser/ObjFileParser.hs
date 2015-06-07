@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Codec.Soten.Parser.ObjFileParser (
     Model(..)
   , getModel
@@ -7,71 +8,97 @@ module Codec.Soten.Parser.ObjFileParser (
 import Data.Char (isSpace)
 import Data.List (foldl')
 
-import Codec.Soten.Primitive (PrimitiveType(..))
+import Control.Lens ((^.), (&), (.~), makeLenses)
 
-data ObjFileParser = ObjFileParser
-                     {
-                       objFileParserModel     :: !Model
-                     }
+import Codec.Soten.Primitive (PrimitiveType(..))
+import Codec.Soten.Util (extract, nothing)
+
+data Object = Object
+              { _objectName :: !String
+              }
+makeLenses ''Object
 
 data Model = Model
+             { _modelObjects :: ![Object]
+             }
+makeLenses ''Model
+
+data ObjFileParser = ObjFileParser
+                     { _objFileParserModel   :: !Model
+                     , _objFileParserCurrent :: !(Maybe Object)
+                     }
+makeLenses ''ObjFileParser
+
+createObject :: String -> Object
+createObject = Object
 
 newModel :: Model
-newModel = undefined
+newModel = Model []
+
+newObjFileParser :: ObjFileParser
+newObjFileParser = ObjFileParser newModel Nothing
 
 getModel :: String -> String -> Model
-getModel content modelName = objFileParserModel $
-    foldl' (flip parseLine) (ObjFileParser newModel) fileLines
+getModel content modelName = _objFileParserModel $
+    foldl' (flip parseLine) newObjFileParser fileLines
   where
     fileLines = map replaceTabs (lines content)
     replaceTabs = map (\c -> if c == '\t' then ' ' else c)
 
 parseLine :: String -> ObjFileParser -> ObjFileParser
 parseLine []               = id
-parseLine ('v':' ':xs)     = getVector3
-parseLine ('v':'t':' ':xs) = getVector
-parseLine ('v':'n':' ':xs) = getVector3
-parseLine ('p':' ':xs)     = getFace PrimitivePoint
-parseLine ('l':' ':xs)     = getFace PrimitiveLine
-parseLine ('f':' ':xs)     = getFace PrimitivePolygone
-parseLine ('#':' ':xs)     = getComment
-parseLine ('u':' ':xs)     = getMaterialDesc
-parseLine ('m':'g':' ':xs) = getGroupNumberAndResolution
-parseLine ('m':' ':xs)     = getMaterialLib
-parseLine ('g':' ':xs)     = getGroupName
-parseLine ('s':' ':xs)     = getGroupNumber
-parseLine ('o':' ':xs)     = getObjectName
+parseLine ('v':' ':xs)     = getVector3 xs
+parseLine ('v':'t':' ':xs) = getVector xs
+parseLine ('v':'n':' ':xs) = getVector3 xs
+parseLine ('p':' ':xs)     = getFace xs PrimitivePoint
+parseLine ('l':' ':xs)     = getFace xs PrimitiveLine
+parseLine ('f':' ':xs)     = getFace xs PrimitivePolygone
+parseLine ('#':_)          = getComment
+parseLine ('u':' ':xs)     = getMaterialDesc xs
+parseLine ('m':'g':' ':xs) = getGroupNumberAndResolution xs
+parseLine ('m':' ':xs)     = getMaterialLib xs
+parseLine ('g':' ':xs)     = getGroupName xs
+parseLine ('s':' ':xs)     = getGroupNumber xs
+parseLine ('o':' ':xs)     = getObjectName xs
 parseLine _                = id
 
-getVector3 :: ObjFileParser -> ObjFileParser
+getVector3 :: String -> ObjFileParser -> ObjFileParser
 getVector3 = undefined
 
-getVector :: ObjFileParser -> ObjFileParser
+getVector :: String -> ObjFileParser -> ObjFileParser
 getVector = undefined
 
-getFace :: PrimitiveType -> ObjFileParser -> ObjFileParser
+getFace :: String -> PrimitiveType -> ObjFileParser -> ObjFileParser
 getFace = undefined
 
 getComment :: ObjFileParser -> ObjFileParser
 getComment = id
 
-getMaterialDesc :: ObjFileParser -> ObjFileParser
+getMaterialDesc :: String -> ObjFileParser -> ObjFileParser
 getMaterialDesc = undefined
 
-getGroupNumberAndResolution :: ObjFileParser -> ObjFileParser
+getGroupNumberAndResolution :: String -> ObjFileParser -> ObjFileParser
 getGroupNumberAndResolution = undefined
 
-getMaterialLib :: ObjFileParser -> ObjFileParser
+getMaterialLib :: String -> ObjFileParser -> ObjFileParser
 getMaterialLib = undefined
 
-getGroupName :: ObjFileParser -> ObjFileParser
+getGroupName :: String -> ObjFileParser -> ObjFileParser
 getGroupName = undefined
 
-getGroupNumber :: ObjFileParser -> ObjFileParser
+getGroupNumber :: String -> ObjFileParser -> ObjFileParser
 getGroupNumber = undefined
 
-getObjectName :: ObjFileParser -> ObjFileParser
-getObjectName = undefined
+getObjectName :: String -> ObjFileParser -> ObjFileParser
+getObjectName [] obj = obj
+getObjectName objName obj =
+    obj & objFileParserModel   .~ updModel
+        & objFileParserCurrent .~ (nothing newObject foundObject)
+  where
+    updModel  = (obj^.objFileParserModel) & modelObjects .~ objectsList
+    newObject = createObject objName
+    (foundObject, objectsList) = extract (\o -> o^.objectName == objName)
+        (obj^.objFileParserModel^.modelObjects)
 
-skipLine :: ObjFileParser -> ObjFileParser
+skipLine :: String -> ObjFileParser -> ObjFileParser
 skipLine = undefined
