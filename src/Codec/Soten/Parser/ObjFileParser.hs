@@ -1,16 +1,17 @@
+{-# LANGUAGE RecordWildCards #-}
 module Codec.Soten.Parser.ObjFileParser (
     Model(..)
   , getModel
 ) where
 
-import Control.Monad.State.Lazy
+import Data.Char (isSpace)
+import Data.List (foldl')
 
 import Codec.Soten.Primitive (PrimitiveType(..))
 
 data ObjFileParser = ObjFileParser
-                     { objFileParserContent   :: !String
-                     , objFileParserModelName :: !String
-                     , objFileParserModel     :: !Model
+                     {
+                       objFileParserModel     :: !Model
                      }
 
 data Model = Model
@@ -19,57 +20,58 @@ newModel :: Model
 newModel = undefined
 
 getModel :: String -> String -> Model
-getModel content modelName =
-    evalState parseFile (ObjFileParser content modelName newModel)
+getModel content modelName = objFileParserModel $
+    foldl' (flip parseLine) (ObjFileParser newModel) fileLines
+  where
+    fileLines = map replaceTabs (lines content)
+    replaceTabs = map (\c -> if c == '\t' then ' ' else c)
 
-parseFile :: State ObjFileParser Model
-parseFile = do
-    obj <- get
-    if null (objFileParserContent obj)
-    then return (objFileParserModel obj)
-    else do
-        case (head $ objFileParserContent obj) of
-            'v' -> getVertex
-            'p' -> getFace PrimitivePoint
-            'l' -> getFace PrimitiveLine
-            'f' -> getFace PrimitivePolygone
-            '#' -> getComment
-            'u' -> getMaterialDesc
-            'm' -> if 'g' == head (tail (objFileParserContent obj))
-                   then getGroupNumberAndResolution
-                   else getMaterialLib
-            'g' -> getGroupName
-            's' -> getGroupNumber
-            'o' -> getObjectName
-            _   -> skipLine
-        parseFile
+parseLine :: String -> ObjFileParser -> ObjFileParser
+parseLine []               = id
+parseLine ('v':' ':xs)     = getVector3
+parseLine ('v':'t':' ':xs) = getVector
+parseLine ('v':'n':' ':xs) = getVector3
+parseLine ('p':' ':xs)     = getFace PrimitivePoint
+parseLine ('l':' ':xs)     = getFace PrimitiveLine
+parseLine ('f':' ':xs)     = getFace PrimitivePolygone
+parseLine ('#':' ':xs)     = getComment
+parseLine ('u':' ':xs)     = getMaterialDesc
+parseLine ('m':'g':' ':xs) = getGroupNumberAndResolution
+parseLine ('m':' ':xs)     = getMaterialLib
+parseLine ('g':' ':xs)     = getGroupName
+parseLine ('s':' ':xs)     = getGroupNumber
+parseLine ('o':' ':xs)     = getObjectName
+parseLine _                = id
 
-getVertex :: State ObjFileParser ObjFileParser
-getVertex = undefined
+getVector3 :: ObjFileParser -> ObjFileParser
+getVector3 = undefined
 
-getFace :: PrimitiveType -> State ObjFileParser ObjFileParser
+getVector :: ObjFileParser -> ObjFileParser
+getVector = undefined
+
+getFace :: PrimitiveType -> ObjFileParser -> ObjFileParser
 getFace = undefined
 
-getComment :: State ObjFileParser ObjFileParser
-getComment = undefined
+getComment :: ObjFileParser -> ObjFileParser
+getComment = id
 
-getMaterialDesc :: State ObjFileParser ObjFileParser
+getMaterialDesc :: ObjFileParser -> ObjFileParser
 getMaterialDesc = undefined
 
-getGroupNumberAndResolution :: State ObjFileParser ObjFileParser
+getGroupNumberAndResolution :: ObjFileParser -> ObjFileParser
 getGroupNumberAndResolution = undefined
 
-getMaterialLib :: State ObjFileParser ObjFileParser
+getMaterialLib :: ObjFileParser -> ObjFileParser
 getMaterialLib = undefined
 
-getGroupName :: State ObjFileParser ObjFileParser
+getGroupName :: ObjFileParser -> ObjFileParser
 getGroupName = undefined
 
-getGroupNumber :: State ObjFileParser ObjFileParser
+getGroupNumber :: ObjFileParser -> ObjFileParser
 getGroupNumber = undefined
 
-getObjectName :: State ObjFileParser ObjFileParser
+getObjectName :: ObjFileParser -> ObjFileParser
 getObjectName = undefined
 
-skipLine :: State ObjFileParser ObjFileParser
+skipLine :: ObjFileParser -> ObjFileParser
 skipLine = undefined
