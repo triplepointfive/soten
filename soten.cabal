@@ -12,16 +12,18 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:     Codec.Soten
-                     , Codec.Soten.Importer
                      , Codec.Soten.FileImporter
+                     , Codec.Soten.Format.ObjFormat
+                     , Codec.Soten.Importer
                      , Codec.Soten.Importer.ObjImporter
                      , Codec.Soten.Parser.ObjFileParser
-                     , Codec.Soten.Format.ObjFormat
+                     , Codec.Soten.Primitive
                      , Codec.Soten.Util
   build-depends:       base >=4.8 && <4.9
                      , filepath
                      , bytestring
                      , unix
+                     , mtl
   hs-source-dirs:      src
   default-language:    Haskell2010
   ghc-options:         -W

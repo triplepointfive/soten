@@ -7,7 +7,7 @@ import Control.Monad (when)
 import System.Posix (getFileStatus, fileSize)
 
 import Codec.Soten.Format.ObjFormat (ObjFormat(..))
-import Codec.Soten.Parser.ObjFileParser (ObjFileParser(..), Model(..), getModel)
+import Codec.Soten.Parser.ObjFileParser (Model(..), getModel)
 import Codec.Soten.Importer (searchFileHeaderForToken)
 import Codec.Soten.Util ( CheckType(..)
                         , hasExtention
@@ -29,8 +29,7 @@ internalReadFile filePath = do
     sizeOfFile <- fmap fileSize (getFileStatus filePath)
     when (sizeOfFile < objMinSize)
         (throw $ DeadlyImporterError "OBJ-file is too small.")
-    createDataFromImport $ getModel $
-        ObjFileParser (removeSlashes content) filePath
+    createDataFromImport $ getModel (removeSlashes content) filePath
   where
     objMinSize = 16
 
