@@ -22,9 +22,10 @@ data Object = Object
 makeLenses ''Object
 
 data Model = Model
-             { _modelObjects  :: ![Object]
-             , _modelVertices :: ![V3 Float]
-             , _modelNormals  :: ![V3 Float]
+             { _modelObjects      :: ![Object]
+             , _modelVertices     :: ![V3 Float]
+             , _modelTextureCoord :: ![V3 Float]
+             , _modelNormals      :: ![V3 Float]
              }
 makeLenses ''Model
 
@@ -38,7 +39,7 @@ createObject :: String -> Object
 createObject = Object
 
 newModel :: Model
-newModel = Model [] [] []
+newModel = Model [] [] [] []
 
 newObjFileParser :: ObjFileParser
 newObjFileParser = ObjFileParser newModel Nothing
@@ -53,7 +54,7 @@ getModel content modelName = _objFileParserModel $
 parseLine :: String -> ObjFileParser -> ObjFileParser
 parseLine []               = id
 parseLine ('v':' ':xs)     = getVertex xs
-parseLine ('v':'t':' ':xs) = getVector xs
+parseLine ('v':'t':' ':xs) = getTextureCoord xs
 parseLine ('v':'n':' ':xs) = getVertexNormal xs
 parseLine ('p':' ':xs)     = getFace xs PrimitivePoint
 parseLine ('l':' ':xs)     = getFace xs PrimitiveLine
@@ -71,11 +72,21 @@ getVertex :: String -> ObjFileParser -> ObjFileParser
 getVertex line obj =
     obj & objFileParserModel %~ modelVertices %~ (++[parseVector3 line])
 
-getVector :: String -> ObjFileParser -> ObjFileParser
-getVector = undefined
+getTextureCoord :: String -> ObjFileParser -> ObjFileParser
+getTextureCoord line obj =
+    obj & objFileParserModel %~ modelTextureCoord %~ (++[newVector coords])
+  where
+    newVector (x:y:[])  = V3 x y 0
+    newVector (x:y:z:_) = V3 x y z
+    newVector _         = throw $ DeadlyImporterError $
+        "Invalid number of components: '" ++ line ++ "'"
+    coords = map (maybe parseError fromJust . readMay ) $ take 3
+        $ filter (not . null) $ split " " line
+    parseError = throw $ DeadlyImporterError $
+        "Failed to getVertex for line: '" ++ line ++ "'"
 
 getVertexNormal :: String -> ObjFileParser -> ObjFileParser
-getVertexNormal line obj = undefined
+getVertexNormal line obj =
     obj & objFileParserModel %~ modelNormals %~ (++[parseVector3 line])
 
 getFace :: String -> PrimitiveType -> ObjFileParser -> ObjFileParser
@@ -87,8 +98,9 @@ getComment = id
 getMaterialDesc :: String -> ObjFileParser -> ObjFileParser
 getMaterialDesc = undefined
 
+-- Not used
 getGroupNumberAndResolution :: String -> ObjFileParser -> ObjFileParser
-getGroupNumberAndResolution = undefined
+getGroupNumberAndResolution _ = id
 
 getMaterialLib :: String -> ObjFileParser -> ObjFileParser
 getMaterialLib = undefined
@@ -96,8 +108,9 @@ getMaterialLib = undefined
 getGroupName :: String -> ObjFileParser -> ObjFileParser
 getGroupName = undefined
 
+-- Not used
 getGroupNumber :: String -> ObjFileParser -> ObjFileParser
-getGroupNumber = undefined
+getGroupNumber _ = id
 
 getObjectName :: String -> ObjFileParser -> ObjFileParser
 getObjectName [] obj = obj
