@@ -5,13 +5,16 @@ module Codec.Soten.Parser.ObjFileParser (
   , getModel
 ) where
 
-import Data.Char (isSpace)
 import Data.List (foldl')
 
-import Control.Lens ((^.), (&), (.~), makeLenses)
+import Control.Lens ((^.), (&), (%~), (.~), makeLenses)
+import Data.Maybe (fromJust)
+import Data.String.Utils (split, strip)
+import Linear (V3(..))
+import Safe (readMay)
 
 import Codec.Soten.Primitive (PrimitiveType(..))
-import Codec.Soten.Util (extract, nothing)
+import Codec.Soten.Util (extract, nothing, throw, DeadlyImporterError(..))
 
 data Object = Object
               { _objectName :: !String
@@ -19,7 +22,9 @@ data Object = Object
 makeLenses ''Object
 
 data Model = Model
-             { _modelObjects :: ![Object]
+             { _modelObjects  :: ![Object]
+             , _modelVertices :: ![V3 Float]
+             , _modelNormals  :: ![V3 Float]
              }
 makeLenses ''Model
 
@@ -33,7 +38,7 @@ createObject :: String -> Object
 createObject = Object
 
 newModel :: Model
-newModel = Model []
+newModel = Model [] [] []
 
 newObjFileParser :: ObjFileParser
 newObjFileParser = ObjFileParser newModel Nothing
@@ -47,9 +52,9 @@ getModel content modelName = _objFileParserModel $
 
 parseLine :: String -> ObjFileParser -> ObjFileParser
 parseLine []               = id
-parseLine ('v':' ':xs)     = getVector3 xs
+parseLine ('v':' ':xs)     = getVertex xs
 parseLine ('v':'t':' ':xs) = getVector xs
-parseLine ('v':'n':' ':xs) = getVector3 xs
+parseLine ('v':'n':' ':xs) = getVertexNormal xs
 parseLine ('p':' ':xs)     = getFace xs PrimitivePoint
 parseLine ('l':' ':xs)     = getFace xs PrimitiveLine
 parseLine ('f':' ':xs)     = getFace xs PrimitivePolygone
@@ -62,11 +67,16 @@ parseLine ('s':' ':xs)     = getGroupNumber xs
 parseLine ('o':' ':xs)     = getObjectName xs
 parseLine _                = id
 
-getVector3 :: String -> ObjFileParser -> ObjFileParser
-getVector3 = undefined
+getVertex :: String -> ObjFileParser -> ObjFileParser
+getVertex line obj =
+    obj & objFileParserModel %~ modelVertices %~ (++[parseVector3 line])
 
 getVector :: String -> ObjFileParser -> ObjFileParser
 getVector = undefined
+
+getVertexNormal :: String -> ObjFileParser -> ObjFileParser
+getVertexNormal line obj = undefined
+    obj & objFileParserModel %~ modelNormals %~ (++[parseVector3 line])
 
 getFace :: String -> PrimitiveType -> ObjFileParser -> ObjFileParser
 getFace = undefined
@@ -92,13 +102,17 @@ getGroupNumber = undefined
 getObjectName :: String -> ObjFileParser -> ObjFileParser
 getObjectName [] obj = obj
 getObjectName objName obj =
-    obj & objFileParserModel   .~ updModel
-        & objFileParserCurrent .~ (nothing newObject foundObject)
+    obj & objFileParserModel %~ modelObjects .~ objectsList
+        & objFileParserCurrent .~ nothing newObject foundObject
   where
-    updModel  = (obj^.objFileParserModel) & modelObjects .~ objectsList
     newObject = createObject objName
-    (foundObject, objectsList) = extract (\o -> o^.objectName == objName)
+    (foundObject, objectsList) = extract ((==objName) . _objectName)
         (obj^.objFileParserModel^.modelObjects)
 
-skipLine :: String -> ObjFileParser -> ObjFileParser
-skipLine = undefined
+parseVector3 :: String -> V3 Float
+parseVector3 line = V3 x y z
+  where
+    [x, y, z] = map (maybe parseError fromJust . readMay ) $ take 3
+        $ filter (not . null) $ split " " line
+    parseError = throw $ DeadlyImporterError $
+        "Failed to getVertex for line: '" ++ line ++ "'"

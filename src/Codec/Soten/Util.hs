@@ -11,7 +11,7 @@ module Codec.Soten.Util (
 ) where
 
 import           Control.Exception (Exception, throw)
-import           Data.Char (toLower)
+import           Data.Char (isSpace, toLower)
 import           Data.Typeable (Typeable)
 import           System.FilePath (takeExtension)
 
