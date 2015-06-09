@@ -14,25 +14,13 @@ import Linear (V3(..))
 import Safe (readMay)
 
 import Codec.Soten.Primitive (PrimitiveType(..))
+import Codec.Soten.Data.ObjData
 import Codec.Soten.Util (extract, nothing, throw, DeadlyImporterError(..))
-
-data Object = Object
-              { _objectName :: !String
-              }
-makeLenses ''Object
-
-data Model = Model
-             { _modelObjects      :: ![Object]
-             , _modelVertices     :: ![V3 Float]
-             , _modelTextureCoord :: ![V3 Float]
-             , _modelNormals      :: ![V3 Float]
-             }
-makeLenses ''Model
 
 data ObjFileParser = ObjFileParser
                      { _objFileParserModel   :: !Model
                      , _objFileParserCurrent :: !(Maybe Object)
-                     }
+                     } deriving (Show)
 makeLenses ''ObjFileParser
 
 createObject :: String -> Object
@@ -56,9 +44,9 @@ parseLine []               = id
 parseLine ('v':' ':xs)     = getVertex xs
 parseLine ('v':'t':' ':xs) = getTextureCoord xs
 parseLine ('v':'n':' ':xs) = getVertexNormal xs
-parseLine ('p':' ':xs)     = getFace xs PrimitivePoint
-parseLine ('l':' ':xs)     = getFace xs PrimitiveLine
-parseLine ('f':' ':xs)     = getFace xs PrimitivePolygone
+parseLine ('p':' ':xs)     = getFace PrimitivePoint xs
+parseLine ('l':' ':xs)     = getFace PrimitiveLine xs
+parseLine ('f':' ':xs)     = getFace PrimitivePolygone xs
 parseLine ('#':_)          = getComment
 parseLine ('u':' ':xs)     = getMaterialDesc xs
 parseLine ('m':'g':' ':xs) = getGroupNumberAndResolution xs
@@ -89,8 +77,54 @@ getVertexNormal :: String -> ObjFileParser -> ObjFileParser
 getVertexNormal line obj =
     obj & objFileParserModel %~ modelNormals %~ (++[parseVector3 line])
 
-getFace :: String -> PrimitiveType -> ObjFileParser -> ObjFileParser
-getFace = undefined
+type FaceIndices = ([Int], [Int], [Int])
+
+-- TODO: Assign material
+getFace :: PrimitiveType -> String -> ObjFileParser -> ObjFileParser
+getFace _ "" obj = obj
+getFace PrimitivePolygone line obj = if null indices then obj else
+    let dataExample = tightDigits (head indices)
+        dataPattern = flip (faceVertexParser dataExample)
+        (vertices, texture, normals) = foldl dataPattern ([], [], []) indices
+    in error $ show (vertices, texture, normals)
+  where
+    indices = filter (not . null) $ split " " line
+
+    faceVertexParser :: String
+                     -> (String -> FaceIndices -> FaceIndices)
+    faceVertexParser (_:'/':_:'/':_:[])
+      = \ str (vs, vts, vns) -> let [v, vt, vn] = splitAndParseIndecis str in
+        (vs ++ [v], vts ++ [vt], vns ++ [vn])
+    faceVertexParser (_:'/':'/':_:[])
+      = \ str (vs, vts, vns) -> let [v, vn] = splitAndParseIndecis str in
+        (vs ++ [v], vts, vns ++ [vn])
+    faceVertexParser (_:'/':_:[])
+      = \ str (vs, vts, vns) -> let [v, vt] = splitAndParseIndecis str in
+        (vs ++ [v], vts ++ [vt], vns)
+    faceVertexParser (_:[])
+      = \ str (vs, vts, vns) -> let [v] = splitAndParseIndecis str in
+        (vs ++ [v], vts, vns)
+    faceVertexParser example = throw $ DeadlyImporterError $
+      "Failed to parse faceVertex: '" ++ line ++ "' - invalid pattern '" ++
+      example ++ "'"
+
+    splitAndParseIndecis :: String -> [Int]
+    splitAndParseIndecis = map (maybe parseError id . readMay) .
+        filter (not . null) . split "/"
+      where
+        parseError = throw $ DeadlyImporterError $
+            "Failed to retirve indecis for line: '" ++ line ++ "'"
+
+    tightDigits :: String -> String
+    tightDigits = tightDigitsIter False
+      where
+        tightDigitsIter :: Bool -> String -> String
+        tightDigitsIter _ [] = []
+        tightDigitsIter False (x:xs) =
+            x : tightDigitsIter (x `elem` "0123456789") xs
+        tightDigitsIter True (x:xs)
+            | x `elem` "0123456789" = tightDigitsIter True xs
+            | otherwise             = x : tightDigitsIter False xs
 
 getComment :: ObjFileParser -> ObjFileParser
 getComment = id
@@ -125,7 +159,7 @@ getObjectName objName obj =
 parseVector3 :: String -> V3 Float
 parseVector3 line = V3 x y z
   where
-    [x, y, z] = map (maybe parseError fromJust . readMay ) $ take 3
+    [x, y, z] = map (maybe parseError id . readMay) $ take 3
         $ filter (not . null) $ split " " line
     parseError = throw $ DeadlyImporterError $
         "Failed to getVertex for line: '" ++ line ++ "'"

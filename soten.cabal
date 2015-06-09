@@ -12,6 +12,7 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:     Codec.Soten
+                     , Codec.Soten.Data.ObjData
                      , Codec.Soten.FileImporter
                      , Codec.Soten.Format.ObjFormat
                      , Codec.Soten.Importer
