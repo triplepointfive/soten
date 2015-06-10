@@ -8,7 +8,7 @@ module Codec.Soten.Parser.ObjFileParser (
 import Data.List (foldl')
 
 import Control.Lens ((^.), (&), (%~), (.~), makeLenses)
-import Data.Maybe (fromJust)
+import Data.Maybe (isJust, fromJust)
 import Data.String.Utils (split, strip)
 import Linear (V3(..))
 import Safe (readMay)
@@ -22,12 +22,6 @@ data ObjFileParser = ObjFileParser
                      , _objFileParserCurrent :: !(Maybe Object)
                      } deriving (Show)
 makeLenses ''ObjFileParser
-
-createObject :: String -> Object
-createObject = Object
-
-newModel :: Model
-newModel = Model [] [] [] []
 
 newObjFileParser :: ObjFileParser
 newObjFileParser = ObjFileParser newModel Nothing
@@ -82,11 +76,23 @@ type FaceIndices = ([Int], [Int], [Int])
 -- TODO: Assign material
 getFace :: PrimitiveType -> String -> ObjFileParser -> ObjFileParser
 getFace _ "" obj = obj
-getFace PrimitivePolygone line obj = if null indices then obj else
-    let dataExample = tightDigits (head indices)
-        dataPattern = flip (faceVertexParser dataExample)
-        (vertices, texture, normals) = foldl dataPattern ([], [], []) indices
-    in error $ show (vertices, texture, normals)
+getFace primitiveType line obj =
+    if null indices
+    then obj
+    else
+        let dataExample = tightDigits (head indices)
+            dataPattern = flip (faceVertexParser dataExample)
+            (vertices, texture, normals) = foldl dataPattern ([], [], []) indices
+            newFace = Face primitiveType vertices texture normals
+            -- TODO: Check # of elements in face
+--        in
+        in createDefaultCurObject obj
+--        if isJust (obj^.objFileParserCurrent)
+--        then
+--            obj & objFileParserCurrent %~ fmap (objectFaces %~ (++[newFace]))
+--        else
+--            obj & objFileParserCurrent .~ Just (
+--                (newObject "defaultobject") & objectFaces %~ (++[newFace]))
   where
     indices = filter (not . null) $ split " " line
 
@@ -152,7 +158,7 @@ getObjectName objName obj =
     obj & objFileParserModel %~ modelObjects .~ objectsList
         & objFileParserCurrent .~ nothing newObject foundObject
   where
-    newObject = createObject objName
+    newObject = newObject objName
     (foundObject, objectsList) = extract ((==objName) . _objectName)
         (obj^.objFileParserModel^.modelObjects)
 
@@ -163,3 +169,9 @@ parseVector3 line = V3 x y z
         $ filter (not . null) $ split " " line
     parseError = throw $ DeadlyImporterError $
         "Failed to getVertex for line: '" ++ line ++ "'"
+
+createDefaultCurObject :: ObjFileParser -> ObjFileParser
+createDefaultCurObject obj
+    | isJust (obj^.objFileParserCurrent) = obj
+    | otherwise = obj & objFileParserCurrent
+        .~ Just (newObject "defaultobject")
