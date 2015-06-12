@@ -28,7 +28,7 @@ newObjFileParser = ObjFileParser newModel Nothing
 
 getModel :: String -> String -> Model
 getModel content modelName = _objFileParserModel $
-    foldl' (flip parseLine) newObjFileParser fileLines
+    foldl' (flip parseLine) (newObjFileParser modelName) fileLines
   where
     fileLines = map replaceTabs (lines content)
     replaceTabs = map (\c -> if c == '\t' then ' ' else c)

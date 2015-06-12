@@ -1,6 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Codec.Soten.Data.ObjData where
 
+import Data.Map as Map
+
 import Control.Lens (makeLenses)
 import Linear (V3(..))
 
@@ -19,6 +21,10 @@ data TextureType
     | TextureDispType
     | TextureTypeCount
     deriving Show
+
+type GroupMap = Map String Int
+
+defaultMaterial = "DefaultMaterial"
 
 data Material =
     Material
@@ -82,10 +88,38 @@ data Object = Object
 makeLenses ''Object
 
 data Model = Model
-             { _modelObjects      :: ![Object]
+             { -- | Model name
+               _modelName         :: !String
+               -- | List ob assigned objects
+             , _modelObjects      :: ![Object]
+               -- | Current Object
+             , _modelCurrentObject :: !(Maybe Object)
+               -- | Current Material
+             , _modelCurrentMaterial :: !(Maybe Material)
+               -- | Default Material
+             , _modelDefaultMaterial :: !Material
+               -- | All generated materials
+--             , _modelMaterialLib  :: ![String]
+               -- | All generated groups
+             , _modelGroupLib  :: ![String]
+               -- | All generated vertices
              , _modelVertices     :: ![V3 Float]
-             , _modelTextureCoord :: ![V3 Float]
+               -- | All generated normals
              , _modelNormals      :: ![V3 Float]
+               -- | Group map
+             , _modelGroups       :: !GroupMap
+               -- | Group to face id assignment
+             , _modelGroupFaceIDs :: ![Int]
+               -- | Active group
+             , _modelActiveGroup  :: !String
+               -- | Generated texture coordinates
+             , _modelTextureCoord :: ![V3 Float]
+               -- | Current Mesh
+             , _modelCurrentMesh  :: !(Maybe Mesh)
+               -- | Stored Meshes
+             , _modelMeshes       :: ![Mesh]
+               -- | Material map
+             , _modelMaterialMap  :: !(Map String Material)
              } deriving (Show)
 makeLenses ''Model
 
@@ -95,8 +129,26 @@ newObject name = Object name []
 --newMesh :: Mesh
 --newMesh = Mesh []
 
-newModel :: Model
-newModel = Model [] [] [] []
+newModel :: String -> Model
+newModel name =
+    Model
+    { _modelName            = name
+    , _modelObjects         = []
+    , _modelCurrentObject   = Nothing
+    , _modelCurrentMaterial = Nothing
+    , _modelDefaultMaterial = newMaterial
+--    , _modelMaterialLib     = []
+    , _modelGroupLib        = []
+    , _modelVertices        = []
+    , _modelNormals         = []
+    , _modelGroups          = empty
+    , _modelGroupFaceIDs    = []
+    , _modelActiveGroup     = ""
+    , _modelTextureCoord    = []
+    , _modelCurrentMesh     = Nothing
+    , _modelMeshes          = []
+    , _modelMaterialMap     = fromList [(defaultMaterial, newMaterial)]
+    }
 
 modelCreateNewMesh :: Model -> Model
 modelCreateNewMesh model = undefined
@@ -104,7 +156,7 @@ modelCreateNewMesh model = undefined
 newMaterial :: Material
 newMaterial =
     Material
-    { _materialName               = ""
+    { _materialName               = defaultMaterial
     , _materialTexture            = ""
     , _materialTextureSpecular    = ""
     , _materialTextureAmbient     = ""
