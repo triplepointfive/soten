@@ -8,7 +8,7 @@ module Codec.Soten.Parser.ObjFileParser (
 import           Data.List (foldl')
 import qualified Data.Map as Map
 
-import           Control.Lens ((^.), (&), (%~), (.~), makeLenses, ix, Lens', lens)
+import           Control.Lens ((^.), (&), (%~), (.~), Lens', lens)
 import           Data.Maybe (isJust, fromJust)
 import           Data.String.Utils (split, strip)
 import qualified Data.Vector as V
@@ -74,12 +74,12 @@ getFace primitiveType line model =
     else
         let dataExample = tightDigits (head indices)
             dataPattern = flip (faceVertexParser dataExample)
-            (vertices, texture, normals) = foldl dataPattern ([], [], []) indices
+            (vertices, texture, normals) =
+                foldl dataPattern ([], [], []) indices
             face = (newFace vertices texture normals primitiveType)
                 & faceMaterial .~ Just (model ^. modelCurrentMaterial)
             -- TODO: Check # of elements in face
-        in
-          setCurrentObject $ model
+        in storeFace face $ setCurrentMesh $ setCurrentObject $ model
   where
     indices = filter (not . null) $ split " " line
 
@@ -166,7 +166,7 @@ createObject objName = setMeshMaterial . createMesh . addObject
           obj   = newObject & objectName .~ objName
           objID = length (model ^. modelObjects)
     setMeshMaterial model =
-      model
+        model & onMesh %~ meshMaterial .~ (Just $ model ^. modelCurrentMaterial)
 
 createMesh :: Model -> Model
 createMesh model =
@@ -180,6 +180,20 @@ setCurrentObject :: Model -> Model
 setCurrentObject model
     | isJust (model ^. modelCurrentObject) = model
     | otherwise = createObject "defaultobject" model
+
+setCurrentMesh :: Model -> Model
+setCurrentMesh model
+    | isJust (model ^. modelCurrentMesh) = model
+    | otherwise = createMesh model
+
+-- TODO: UI data
+storeFace :: Face -> Model -> Model
+storeFace face model =
+    model & onMesh %~ meshFaces      %~ ((flip V.snoc) face)
+          & onMesh %~ meshHasNormals .~ hasNormals
+  where
+    hasNormals =
+        (model ^. onMesh ^. meshHasNormals) || (null $ face ^. faceNormals)
 
 -- TODO: Turn to Maybe
 onMesh :: Lens' Model Mesh

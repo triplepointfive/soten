@@ -84,9 +84,9 @@ makeLenses ''Face
 data Mesh =
     Mesh
     { -- | All stored faces
-      _meshFaces           :: ![Face]
+      _meshFaces           :: !(V.Vector Face)
       -- | Assigned material
-    , _meshMaterial        :: !(Maybe Index)
+    , _meshMaterial        :: !(Maybe String)
       -- | Number of stored indices
     , _meshuiNumIndices    :: !Int
       -- | Number of UV
@@ -157,7 +157,7 @@ newFace vertices textures normals primType =
 newMesh :: Mesh
 newMesh = 
     Mesh
-    { _meshFaces           = []
+    { _meshFaces           = V.empty
     , _meshMaterial        = Nothing
     , _meshuiNumIndices    = 0
     , _meshuiUVCoordinates = 12
