@@ -23,6 +23,7 @@ library
                      , Codec.Soten.Util
   build-depends:       base >=4.8 && <4.9
                      , bytestring
+                     , containers
                      , filepath
                      , lens
                      , linear

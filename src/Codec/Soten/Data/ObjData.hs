@@ -7,7 +7,7 @@ import Control.Lens (makeLenses)
 import Linear (V3(..))
 
 import Codec.Soten.Primitive (PrimitiveType(..))
-import Codec.Soten.Types (Color3D(..))
+import Codec.Soten.Types (Color3D(..), Index)
 
 data TextureType
     = TextureDiffuseType
@@ -26,6 +26,7 @@ type GroupMap = Map String Int
 
 defaultMaterial = "DefaultMaterial"
 
+-- | Data structure to store all material specific data
 data Material =
     Material
     { -- Name of material description
@@ -60,29 +61,44 @@ data Material =
     } deriving (Show)
 makeLenses ''Material
 
+-- | Data structure for a simple obj-face, describes
+-- discreditation and materials
 data Face = Face
-            { _facePrimitiveType :: !PrimitiveType
-            , _faceVertices      :: ![Int]
-            , _faceTextureCoord  :: ![Int]
-            , _faceNormals       :: ![Int]
-            , _faceMaterial      :: !Material
+            { -- | Primitive Type
+              -- TODO: Use constructors instead
+              _facePrimitiveType :: !PrimitiveType
+              -- | Vertex indices
+            , _faceVertices      :: ![Index]
+              -- | Texture coordinates indices
+            , _faceTextureCoord  :: ![Index]
+              -- | Normal indices
+            , _faceNormals       :: ![Index]
+              -- | Assigned material
+            , _faceMaterial      :: !(Maybe Index)
             } deriving (Show)
 makeLenses ''Face
 
+-- | Data structure to store a mesh
 data Mesh = Mesh
-            { _meshFaces           :: ![Face]
-            , _meshMaterial        :: !Material
+            { -- | All stored faces
+              _meshFaces           :: ![Face]
+              -- | Assigned material
+            , _meshMaterial        :: !(Maybe Index)
               -- | Number of stored indices
             , _meshuiNumIndices    :: !Int
               -- | Number of UV
+              -- TODO: Rethink of this field
             , _meshuiUVCoordinates :: !Int
-            , _meshMaterialIndex   :: !(Maybe Int)
+              -- | True if normals are stored
             , _meshHasNormals      :: !Bool
             } deriving (Show)
 makeLenses ''Mesh
 
+-- | Stores all objects of an objfile object definition
 data Object = Object
-              { _objectName   :: !String
+              { -- | Object name
+                _objectName   :: !String
+                -- | Assigned meshes
               , _objectMeshes :: ![Int]
               } deriving (Show)
 makeLenses ''Object
@@ -98,8 +114,6 @@ data Model = Model
              , _modelCurrentMaterial :: !(Maybe Material)
                -- | Default Material
              , _modelDefaultMaterial :: !Material
-               -- | All generated materials
---             , _modelMaterialLib  :: ![String]
                -- | All generated groups
              , _modelGroupLib  :: ![String]
                -- | All generated vertices
@@ -123,11 +137,28 @@ data Model = Model
              } deriving (Show)
 makeLenses ''Model
 
-newObject :: String -> Object
-newObject name = Object name []
+newObject :: Object
+newObject = Object "" []
 
---newMesh :: Mesh
---newMesh = Mesh []
+newFace :: [Index] -> [Index] -> [Index] -> PrimitiveType -> Face
+newFace vertices textures normals primType =
+    Face
+    { _facePrimitiveType = primType
+    , _faceVertices      = vertices
+    , _faceTextureCoord  = textures
+    , _faceNormals       = normals
+    , _faceMaterial      = Nothing
+    }
+
+newMesh :: Mesh
+newMesh = 
+    Mesh
+    { _meshFaces           = []
+    , _meshMaterial        = Nothing
+    , _meshuiNumIndices    = 0
+    , _meshuiUVCoordinates = 12
+    , _meshHasNormals      = False
+    }
 
 newModel :: String -> Model
 newModel name =

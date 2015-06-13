@@ -19,12 +19,14 @@ import Codec.Soten.Util (extract, nothing, throw, DeadlyImporterError(..))
 
 data ObjFileParser = ObjFileParser
                      { _objFileParserModel   :: !Model
-                     , _objFileParserCurrent :: !(Maybe Object)
                      } deriving (Show)
 makeLenses ''ObjFileParser
 
-newObjFileParser :: ObjFileParser
-newObjFileParser = ObjFileParser newModel Nothing
+newObjFileParser :: String -> ObjFileParser
+newObjFileParser modelName =
+    ObjFileParser
+    { _objFileParserModel   = newModel modelName
+    }
 
 getModel :: String -> String -> Model
 getModel content modelName = _objFileParserModel $
@@ -85,14 +87,7 @@ getFace primitiveType line obj =
             (vertices, texture, normals) = foldl dataPattern ([], [], []) indices
             newFace = Face primitiveType vertices texture normals
             -- TODO: Check # of elements in face
---        in
-        in createDefaultCurObject obj
---        if isJust (obj^.objFileParserCurrent)
---        then
---            obj & objFileParserCurrent %~ fmap (objectFaces %~ (++[newFace]))
---        else
---            obj & objFileParserCurrent .~ Just (
---                (newObject "defaultobject") & objectFaces %~ (++[newFace]))
+        in createObject $ setActiveMaterial obj
   where
     indices = filter (not . null) $ split " " line
 
@@ -156,9 +151,9 @@ getObjectName :: String -> ObjFileParser -> ObjFileParser
 getObjectName [] obj = obj
 getObjectName objName obj =
     obj & objFileParserModel %~ modelObjects .~ objectsList
-        & objFileParserCurrent .~ nothing newObject foundObject
+        & objFileParserModel %~ modelCurrentObject .~ nothing newObject foundObject
   where
-    newObject = newObject objName
+    newObject = newObject & objectName .~ objName
     (foundObject, objectsList) = extract ((==objName) . _objectName)
         (obj^.objFileParserModel^.modelObjects)
 
@@ -170,8 +165,18 @@ parseVector3 line = V3 x y z
     parseError = throw $ DeadlyImporterError $
         "Failed to getVertex for line: '" ++ line ++ "'"
 
-createDefaultCurObject :: ObjFileParser -> ObjFileParser
-createDefaultCurObject obj
-    | isJust (obj^.objFileParserCurrent) = obj
-    | otherwise = obj & objFileParserCurrent
-        .~ Just (newObject "defaultobject")
+createObject :: ObjFileParser -> ObjFileParser
+createObject obj
+    | isJust (obj ^. objFileParserModel ^. modelCurrentObject) = obj
+    | otherwise = obj & objFileParserModel %~ modelCurrentObject
+        .~ Just (newObject & objectName .~ "defaultobject")
+
+setActiveMaterial :: ObjFileParser -> ObjFileParser
+setActiveMaterial obj =
+    obj & objFileParserModel %~ modelCurrentMaterial .~ nothing newMaterial (Just defaultMaterial)
+  where defaultMaterial = obj ^. objFileParserModel ^. modelDefaultMaterial
+
+--setCurrentMesh :: ObjFileParser -> ObjFileParser
+--setCurrentMesh obj =
+--    obj & objFileParserModel %~ modelCurrentMesh
+
