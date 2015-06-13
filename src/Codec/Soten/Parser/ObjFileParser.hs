@@ -17,25 +17,14 @@ import Codec.Soten.Primitive (PrimitiveType(..))
 import Codec.Soten.Data.ObjData
 import Codec.Soten.Util (extract, nothing, throw, DeadlyImporterError(..))
 
-data ObjFileParser = ObjFileParser
-                     { _objFileParserModel   :: !Model
-                     } deriving (Show)
-makeLenses ''ObjFileParser
-
-newObjFileParser :: String -> ObjFileParser
-newObjFileParser modelName =
-    ObjFileParser
-    { _objFileParserModel   = newModel modelName
-    }
-
 getModel :: String -> String -> Model
-getModel content modelName = _objFileParserModel $
-    foldl' (flip parseLine) (newObjFileParser modelName) fileLines
+getModel content modelName =
+    foldl' (flip parseLine) (newModel modelName) fileLines
   where
     fileLines = map replaceTabs (lines content)
     replaceTabs = map (\c -> if c == '\t' then ' ' else c)
 
-parseLine :: String -> ObjFileParser -> ObjFileParser
+parseLine :: String -> Model -> Model
 parseLine []               = id
 parseLine ('v':' ':xs)     = getVertex xs
 parseLine ('v':'t':' ':xs) = getTextureCoord xs
@@ -52,13 +41,11 @@ parseLine ('s':' ':xs)     = getGroupNumber xs
 parseLine ('o':' ':xs)     = getObjectName xs
 parseLine _                = id
 
-getVertex :: String -> ObjFileParser -> ObjFileParser
-getVertex line obj =
-    obj & objFileParserModel %~ modelVertices %~ (++[parseVector3 line])
+getVertex :: String -> Model -> Model
+getVertex line model = model & modelVertices %~ (++[parseVector3 line])
 
-getTextureCoord :: String -> ObjFileParser -> ObjFileParser
-getTextureCoord line obj =
-    obj & objFileParserModel %~ modelTextureCoord %~ (++[newVector coords])
+getTextureCoord :: String -> Model -> Model
+getTextureCoord line model = model & modelTextureCoord %~ (++[newVector coords])
   where
     newVector (x:y:[])  = V3 x y 0
     newVector (x:y:z:_) = V3 x y z
@@ -69,25 +56,24 @@ getTextureCoord line obj =
     parseError = throw $ DeadlyImporterError $
         "Failed to getVertex for line: '" ++ line ++ "'"
 
-getVertexNormal :: String -> ObjFileParser -> ObjFileParser
-getVertexNormal line obj =
-    obj & objFileParserModel %~ modelNormals %~ (++[parseVector3 line])
+getVertexNormal :: String -> Model -> Model
+getVertexNormal line model = model & modelNormals %~ (++[parseVector3 line])
 
 type FaceIndices = ([Int], [Int], [Int])
 
 -- TODO: Assign material
-getFace :: PrimitiveType -> String -> ObjFileParser -> ObjFileParser
-getFace _ "" obj = obj
-getFace primitiveType line obj =
+getFace :: PrimitiveType -> String -> Model -> Model
+getFace _ "" model = model
+getFace primitiveType line model =
     if null indices
-    then obj
+    then model
     else
         let dataExample = tightDigits (head indices)
             dataPattern = flip (faceVertexParser dataExample)
             (vertices, texture, normals) = foldl dataPattern ([], [], []) indices
             newFace = Face primitiveType vertices texture normals
             -- TODO: Check # of elements in face
-        in createObject $ setActiveMaterial obj
+        in createObject $ setActiveMaterial model
   where
     indices = filter (not . null) $ split " " line
 
@@ -127,35 +113,35 @@ getFace primitiveType line obj =
             | x `elem` "0123456789" = tightDigitsIter True xs
             | otherwise             = x : tightDigitsIter False xs
 
-getComment :: ObjFileParser -> ObjFileParser
+getComment :: Model -> Model
 getComment = id
 
-getMaterialDesc :: String -> ObjFileParser -> ObjFileParser
+getMaterialDesc :: String -> Model -> Model
 getMaterialDesc = undefined
 
 -- Not used
-getGroupNumberAndResolution :: String -> ObjFileParser -> ObjFileParser
+getGroupNumberAndResolution :: String -> Model -> Model
 getGroupNumberAndResolution _ = id
 
-getMaterialLib :: String -> ObjFileParser -> ObjFileParser
+getMaterialLib :: String -> Model -> Model
 getMaterialLib = undefined
 
-getGroupName :: String -> ObjFileParser -> ObjFileParser
+getGroupName :: String -> Model -> Model
 getGroupName = undefined
 
 -- Not used
-getGroupNumber :: String -> ObjFileParser -> ObjFileParser
+getGroupNumber :: String -> Model -> Model
 getGroupNumber _ = id
 
-getObjectName :: String -> ObjFileParser -> ObjFileParser
-getObjectName [] obj = obj
-getObjectName objName obj =
-    obj & objFileParserModel %~ modelObjects .~ objectsList
-        & objFileParserModel %~ modelCurrentObject .~ nothing newObject foundObject
+getObjectName :: String -> Model -> Model
+getObjectName [] model = model
+getObjectName objName model =
+    model & modelObjects .~ objectsList
+        & modelCurrentObject .~ nothing newObject foundObject
   where
     newObject = newObject & objectName .~ objName
     (foundObject, objectsList) = extract ((==objName) . _objectName)
-        (obj^.objFileParserModel^.modelObjects)
+        (model^.modelObjects)
 
 parseVector3 :: String -> V3 Float
 parseVector3 line = V3 x y z
@@ -165,18 +151,18 @@ parseVector3 line = V3 x y z
     parseError = throw $ DeadlyImporterError $
         "Failed to getVertex for line: '" ++ line ++ "'"
 
-createObject :: ObjFileParser -> ObjFileParser
-createObject obj
-    | isJust (obj ^. objFileParserModel ^. modelCurrentObject) = obj
-    | otherwise = obj & objFileParserModel %~ modelCurrentObject
+createObject :: Model -> Model
+createObject model
+    | isJust (model ^. modelCurrentObject) = model
+    | otherwise = model & modelCurrentObject
         .~ Just (newObject & objectName .~ "defaultobject")
 
-setActiveMaterial :: ObjFileParser -> ObjFileParser
-setActiveMaterial obj =
-    obj & objFileParserModel %~ modelCurrentMaterial .~ nothing newMaterial (Just defaultMaterial)
-  where defaultMaterial = obj ^. objFileParserModel ^. modelDefaultMaterial
+setActiveMaterial :: Model -> Model
+setActiveMaterial model =
+    model & modelCurrentMaterial .~ nothing newMaterial (Just defaultMaterial)
+  where defaultMaterial = model ^. modelDefaultMaterial
 
---setCurrentMesh :: ObjFileParser -> ObjFileParser
+--setCurrentMesh :: Model -> Model
 --setCurrentMesh obj =
 --    obj & objFileParserModel %~ modelCurrentMesh
 
