@@ -6,7 +6,6 @@ module Codec.Soten.Importer.ObjImporter (
 import Control.Monad (when)
 import System.Posix (getFileStatus, fileSize)
 
-import Codec.Soten.Format.ObjFormat (ObjFormat(..))
 import Codec.Soten.Parser.ObjFileParser (Model(..), getModel)
 import Codec.Soten.Importer (searchFileHeaderForToken)
 import Codec.Soten.Util ( CheckType(..)

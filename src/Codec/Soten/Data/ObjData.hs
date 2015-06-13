@@ -1,13 +1,14 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Codec.Soten.Data.ObjData where
 
-import Data.Map as Map
+import qualified Data.Map as Map
 
-import Control.Lens (makeLenses)
-import Linear (V3(..))
+import           Control.Lens (makeLenses)
+import qualified Data.Vector as V
+import           Linear (V3(..))
 
-import Codec.Soten.Primitive (PrimitiveType(..))
-import Codec.Soten.Types (Color3D(..), Index)
+import           Codec.Soten.Primitive (PrimitiveType(..))
+import           Codec.Soten.Types (Color3D, Index)
 
 data TextureType
     = TextureDiffuseType
@@ -22,7 +23,7 @@ data TextureType
     | TextureTypeCount
     deriving Show
 
-type GroupMap = Map String Int
+type GroupMap = Map.Map String Int
 
 defaultMaterial = "DefaultMaterial"
 
@@ -63,78 +64,81 @@ makeLenses ''Material
 
 -- | Data structure for a simple obj-face, describes
 -- discreditation and materials
-data Face = Face
-            { -- | Primitive Type
-              -- TODO: Use constructors instead
-              _facePrimitiveType :: !PrimitiveType
-              -- | Vertex indices
-            , _faceVertices      :: ![Index]
-              -- | Texture coordinates indices
-            , _faceTextureCoord  :: ![Index]
-              -- | Normal indices
-            , _faceNormals       :: ![Index]
-              -- | Assigned material
-            , _faceMaterial      :: !(Maybe Index)
-            } deriving (Show)
+data Face =
+    Face
+    { -- | Primitive Type
+      -- TODO: Use constructors instead
+      _facePrimitiveType :: !PrimitiveType
+      -- | Vertex indices
+    , _faceVertices      :: ![Index]
+      -- | Texture coordinates indices
+    , _faceTextureCoord  :: ![Index]
+      -- | Normal indices
+    , _faceNormals       :: ![Index]
+      -- | Assigned material
+    , _faceMaterial      :: !(Maybe String)
+    } deriving (Show)
 makeLenses ''Face
 
 -- | Data structure to store a mesh
-data Mesh = Mesh
-            { -- | All stored faces
-              _meshFaces           :: ![Face]
-              -- | Assigned material
-            , _meshMaterial        :: !(Maybe Index)
-              -- | Number of stored indices
-            , _meshuiNumIndices    :: !Int
-              -- | Number of UV
-              -- TODO: Rethink of this field
-            , _meshuiUVCoordinates :: !Int
-              -- | True if normals are stored
-            , _meshHasNormals      :: !Bool
-            } deriving (Show)
+data Mesh =
+    Mesh
+    { -- | All stored faces
+      _meshFaces           :: ![Face]
+      -- | Assigned material
+    , _meshMaterial        :: !(Maybe Index)
+      -- | Number of stored indices
+    , _meshuiNumIndices    :: !Int
+      -- | Number of UV
+      -- TODO: Rethink of this field
+    , _meshuiUVCoordinates :: !Int
+      -- | True if normals are stored
+    , _meshHasNormals      :: !Bool
+    } deriving (Show)
 makeLenses ''Mesh
 
 -- | Stores all objects of an objfile object definition
-data Object = Object
-              { -- | Object name
-                _objectName   :: !String
-                -- | Assigned meshes
-              , _objectMeshes :: ![Int]
-              } deriving (Show)
+data Object =
+    Object
+    { -- | Object name
+      _objectName   :: !String
+      -- | Assigned meshes
+    , _objectMeshes :: ![Index]
+    } deriving (Show)
 makeLenses ''Object
 
-data Model = Model
-             { -- | Model name
-               _modelName         :: !String
-               -- | List ob assigned objects
-             , _modelObjects      :: ![Object]
-               -- | Current Object
-             , _modelCurrentObject :: !(Maybe Object)
-               -- | Current Material
-             , _modelCurrentMaterial :: !(Maybe Material)
-               -- | Default Material
-             , _modelDefaultMaterial :: !Material
-               -- | All generated groups
-             , _modelGroupLib  :: ![String]
-               -- | All generated vertices
-             , _modelVertices     :: ![V3 Float]
-               -- | All generated normals
-             , _modelNormals      :: ![V3 Float]
-               -- | Group map
-             , _modelGroups       :: !GroupMap
-               -- | Group to face id assignment
-             , _modelGroupFaceIDs :: ![Int]
-               -- | Active group
-             , _modelActiveGroup  :: !String
-               -- | Generated texture coordinates
-             , _modelTextureCoord :: ![V3 Float]
-               -- | Current Mesh
-             , _modelCurrentMesh  :: !(Maybe Mesh)
-               -- | Stored Meshes
-             , _modelMeshes       :: ![Mesh]
-               -- | Material map
-             , _modelMaterialMap  :: !(Map String Material)
-             } deriving (Show)
+-- | Data structure to store all obj-specific model datum
+data Model =
+    Model
+    { -- | Model name
+      _modelName            :: !String
+      -- | List ob assigned objects
+    , _modelObjects         :: !(V.Vector Object)
+      -- | Current Object
+    , _modelCurrentObject   :: !(Maybe Index)
+      -- | Current Material
+    , _modelCurrentMaterial :: !String
+      -- | Current Mesh
+    , _modelCurrentMesh     :: !(Maybe Index)
+      -- | All generated groups
+    , _modelGroupLib        :: ![String]
+      -- | All generated vertices
+    , _modelVertices        :: ![V3 Float]
+      -- | All generated normals
+    , _modelNormals         :: ![V3 Float]
+      -- | Group map
+    , _modelGroups          :: !GroupMap
+      -- | Group to face id assignment
+    , _modelGroupFaceIDs    :: ![Int]
+      -- | Active group
+    , _modelActiveGroup     :: !String
+      -- | Generated texture coordinates
+    , _modelTextureCoord    :: ![V3 Float]
+      -- | Stored Meshes
+    , _modelMeshes          :: !(V.Vector Mesh)
+      -- | Material map
+    , _modelMaterialMap     :: !(Map.Map String Material)
+    } deriving (Show)
 makeLenses ''Model
 
 newObject :: Object
@@ -164,25 +168,20 @@ newModel :: String -> Model
 newModel name =
     Model
     { _modelName            = name
-    , _modelObjects         = []
+    , _modelObjects         = V.empty
     , _modelCurrentObject   = Nothing
-    , _modelCurrentMaterial = Nothing
-    , _modelDefaultMaterial = newMaterial
---    , _modelMaterialLib     = []
+    , _modelCurrentMaterial = defaultMaterial
     , _modelGroupLib        = []
     , _modelVertices        = []
     , _modelNormals         = []
-    , _modelGroups          = empty
+    , _modelGroups          = Map.empty
     , _modelGroupFaceIDs    = []
     , _modelActiveGroup     = ""
     , _modelTextureCoord    = []
     , _modelCurrentMesh     = Nothing
-    , _modelMeshes          = []
-    , _modelMaterialMap     = fromList [(defaultMaterial, newMaterial)]
+    , _modelMeshes          = V.empty
+    , _modelMaterialMap     = Map.fromList [(defaultMaterial, newMaterial)]
     }
-
-modelCreateNewMesh :: Model -> Model
-modelCreateNewMesh model = undefined
 
 newMaterial :: Material
 newMaterial =

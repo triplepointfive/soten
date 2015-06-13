@@ -5,17 +5,21 @@ module Codec.Soten.Parser.ObjFileParser (
   , getModel
 ) where
 
-import Data.List (foldl')
+import           Data.List (foldl')
+import qualified Data.Map as Map
 
-import Control.Lens ((^.), (&), (%~), (.~), makeLenses)
-import Data.Maybe (isJust, fromJust)
-import Data.String.Utils (split, strip)
-import Linear (V3(..))
-import Safe (readMay)
+import           Control.Lens ((^.), (&), (%~), (.~), makeLenses, ix, Lens', lens)
+import           Data.Maybe (isJust, fromJust)
+import           Data.String.Utils (split, strip)
+import qualified Data.Vector as V
+import           Linear (V3(..))
+import           Safe (readMay)
 
-import Codec.Soten.Primitive (PrimitiveType(..))
-import Codec.Soten.Data.ObjData
-import Codec.Soten.Util (extract, nothing, throw, DeadlyImporterError(..))
+import           Codec.Soten.Primitive (PrimitiveType(..))
+import           Codec.Soten.Data.ObjData
+import           Codec.Soten.Util (nothing,
+                 throw, DeadlyImporterError(..)
+                 )
 
 getModel :: String -> String -> Model
 getModel content modelName =
@@ -71,9 +75,11 @@ getFace primitiveType line model =
         let dataExample = tightDigits (head indices)
             dataPattern = flip (faceVertexParser dataExample)
             (vertices, texture, normals) = foldl dataPattern ([], [], []) indices
-            newFace = Face primitiveType vertices texture normals
+            face = (newFace vertices texture normals primitiveType)
+                & faceMaterial .~ Just (model ^. modelCurrentMaterial)
             -- TODO: Check # of elements in face
-        in createObject $ setActiveMaterial model
+        in
+          setCurrentObject $ model
   where
     indices = filter (not . null) $ split " " line
 
@@ -135,13 +141,11 @@ getGroupNumber _ = id
 
 getObjectName :: String -> Model -> Model
 getObjectName [] model = model
-getObjectName objName model =
-    model & modelObjects .~ objectsList
-        & modelCurrentObject .~ nothing newObject foundObject
+getObjectName objName model = case objIndex of
+    Just i  -> model & modelCurrentObject .~ Just i
+    Nothing -> createObject objName model
   where
-    newObject = newObject & objectName .~ objName
-    (foundObject, objectsList) = extract ((==objName) . _objectName)
-        (model^.modelObjects)
+    objIndex = V.findIndex ((==objName) . _objectName) (model ^. modelObjects)
 
 parseVector3 :: String -> V3 Float
 parseVector3 line = V3 x y z
@@ -151,18 +155,46 @@ parseVector3 line = V3 x y z
     parseError = throw $ DeadlyImporterError $
         "Failed to getVertex for line: '" ++ line ++ "'"
 
-createObject :: Model -> Model
-createObject model
+createObject :: String -> Model -> Model
+createObject objName = setMeshMaterial . createMesh . addObject
+  where
+    setMeshMaterial, addObject :: Model -> Model
+    addObject model =
+        model & modelCurrentObject .~ Just objID
+              & modelObjects       %~ ((flip V.snoc) obj)
+      where
+          obj   = newObject & objectName .~ objName
+          objID = length (model ^. modelObjects)
+    setMeshMaterial model =
+      model
+
+createMesh :: Model -> Model
+createMesh model =
+    model & modelCurrentMesh .~ Just meshID
+          & modelMeshes      %~ ((flip V.snoc) newMesh)
+          & onObject         %~ objectMeshes %~ (++[meshID])
+  where
+    meshID = length (model ^. modelMeshes)
+
+setCurrentObject :: Model -> Model
+setCurrentObject model
     | isJust (model ^. modelCurrentObject) = model
-    | otherwise = model & modelCurrentObject
-        .~ Just (newObject & objectName .~ "defaultobject")
+    | otherwise = createObject "defaultobject" model
 
-setActiveMaterial :: Model -> Model
-setActiveMaterial model =
-    model & modelCurrentMaterial .~ nothing newMaterial (Just defaultMaterial)
-  where defaultMaterial = model ^. modelDefaultMaterial
+-- TODO: Turn to Maybe
+onMesh :: Lens' Model Mesh
+onMesh = lens
+    (\ model ->
+        (model ^. modelMeshes ) V.! (fromJust $ model ^. modelCurrentMesh))
+    (\ model mesh -> model & modelMeshes
+        .~ (model ^. modelMeshes ) V.//
+            [(fromJust $ model ^. modelCurrentMesh, mesh)] )
 
---setCurrentMesh :: Model -> Model
---setCurrentMesh obj =
---    obj & objFileParserModel %~ modelCurrentMesh
-
+-- TODO: Turn to Maybe
+onObject :: Lens' Model Object
+onObject = lens
+    (\ model ->
+        (model ^. modelObjects ) V.! (fromJust $ model ^. modelCurrentObject))
+    (\ model mesh -> model & modelObjects
+        .~ (model ^. modelObjects ) V.//
+            [(fromJust $ model ^. modelCurrentObject, mesh)] )
