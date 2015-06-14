@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TemplateHaskell #-}
 module Codec.Soten.Parser.ObjFileParser (
     Model(..)
   , getModel
@@ -9,7 +7,7 @@ import           Data.List (foldl')
 import qualified Data.Map as Map
 
 import           Control.Lens ((^.), (&), (%~), (.~), Lens', lens)
-import           Data.Maybe (isJust, fromJust)
+import           Data.Maybe (isJust, fromJust, fromMaybe)
 import           Data.String.Utils (split, strip)
 import qualified Data.Vector as V
 import           Linear (V3(..))
@@ -51,7 +49,7 @@ getVertex line model = model & modelVertices %~ (++[parseVector3 line])
 getTextureCoord :: String -> Model -> Model
 getTextureCoord line model = model & modelTextureCoord %~ (++[newVector coords])
   where
-    newVector (x:y:[])  = V3 x y 0
+    newVector [x,y]     = V3 x y 0
     newVector (x:y:z:_) = V3 x y z
     newVector _         = throw $ DeadlyImporterError $
         "Invalid number of components: '" ++ line ++ "'"
@@ -76,25 +74,25 @@ getFace primitiveType line model =
             dataPattern = flip (faceVertexParser dataExample)
             (vertices, texture, normals) =
                 foldl dataPattern ([], [], []) indices
-            face = (newFace vertices texture normals primitiveType)
+            face = newFace vertices texture normals primitiveType
                 & faceMaterial .~ Just (model ^. modelCurrentMaterial)
             -- TODO: Check # of elements in face
-        in storeFace face $ setCurrentMesh $ setCurrentObject $ model
+        in storeFace face $ setCurrentMesh $ setCurrentObject model
   where
     indices = filter (not . null) $ split " " line
 
     faceVertexParser :: String
-                     -> (String -> FaceIndices -> FaceIndices)
-    faceVertexParser (_:'/':_:'/':_:[])
+                     -> String -> FaceIndices -> FaceIndices
+    faceVertexParser [_,'/',_,'/',_]
       = \ str (vs, vts, vns) -> let [v, vt, vn] = splitAndParseIndecis str in
         (vs ++ [v], vts ++ [vt], vns ++ [vn])
-    faceVertexParser (_:'/':'/':_:[])
+    faceVertexParser [_,'/','/',_]
       = \ str (vs, vts, vns) -> let [v, vn] = splitAndParseIndecis str in
         (vs ++ [v], vts, vns ++ [vn])
-    faceVertexParser (_:'/':_:[])
+    faceVertexParser [_,'/',_]
       = \ str (vs, vts, vns) -> let [v, vt] = splitAndParseIndecis str in
         (vs ++ [v], vts ++ [vt], vns)
-    faceVertexParser (_:[])
+    faceVertexParser [_]
       = \ str (vs, vts, vns) -> let [v] = splitAndParseIndecis str in
         (vs ++ [v], vts, vns)
     faceVertexParser example = throw $ DeadlyImporterError $
@@ -102,7 +100,7 @@ getFace primitiveType line model =
       example ++ "'"
 
     splitAndParseIndecis :: String -> [Int]
-    splitAndParseIndecis = map (maybe parseError id . readMay) .
+    splitAndParseIndecis = map (fromMaybe parseError . readMay) .
         filter (not . null) . split "/"
       where
         parseError = throw $ DeadlyImporterError $
@@ -155,7 +153,7 @@ getObjectName objName model = case objIndex of
 parseVector3 :: String -> V3 Float
 parseVector3 line = V3 x y z
   where
-    [x, y, z] = map (maybe parseError id . readMay) $ take 3
+    [x, y, z] = map (fromMaybe parseError . readMay) $ take 3
         $ filter (not . null) $ split " " line
     parseError = throw $ DeadlyImporterError $
         "Failed to getVertex for line: '" ++ line ++ "'"
@@ -166,7 +164,7 @@ createObject objName = setMeshMaterial . createMesh . addObject
     setMeshMaterial, addObject :: Model -> Model
     addObject model =
         model & modelCurrentObject .~ Just objID
-              & modelObjects       %~ ((flip V.snoc) obj)
+              & modelObjects       %~ flip V.snoc obj
       where
           obj   = newObject & objectName .~ objName
           objID = length (model ^. modelObjects)
@@ -176,7 +174,7 @@ createObject objName = setMeshMaterial . createMesh . addObject
 createMesh :: Model -> Model
 createMesh model =
     model & modelCurrentMesh .~ Just meshID
-          & modelMeshes      %~ ((flip V.snoc) newMesh)
+          & modelMeshes      %~ flip V.snoc newMesh
           & onObject         %~ objectMeshes %~ (++[meshID])
   where
     meshID = length (model ^. modelMeshes)
@@ -195,22 +193,22 @@ setCurrentMesh model
 setGroup :: String -> Model -> Model
 setGroup groupName model
     | Map.member groupName (model ^. modelGroups) = model
-    | otherwise = model & modelGroups %~ Map.insert groupName (V.empty)
+    | otherwise = model & modelGroups %~ Map.insert groupName V.empty
 
 -- TODO: UI data
 storeFace :: Face -> Model -> Model
 storeFace face model =
-    model & onMesh %~ meshFaces      %~ ((flip V.snoc) face)
+    model & onMesh %~ meshFaces      %~ flip V.snoc face
           & onMesh %~ meshHasNormals .~ hasNormals
   where
     hasNormals =
-        (model ^. onMesh ^. meshHasNormals) || (null $ face ^. faceNormals)
+        (model ^. onMesh ^. meshHasNormals) || null (face ^. faceNormals)
 
 -- TODO: Turn to Maybe
 onMesh :: Lens' Model Mesh
 onMesh = lens
     (\ model ->
-        (model ^. modelMeshes ) V.! (fromJust $ model ^. modelCurrentMesh))
+        (model ^. modelMeshes ) V.! fromJust (model ^. modelCurrentMesh))
     (\ model mesh -> model & modelMeshes
         .~ (model ^. modelMeshes ) V.//
             [(fromJust $ model ^. modelCurrentMesh, mesh)] )
@@ -219,7 +217,7 @@ onMesh = lens
 onObject :: Lens' Model Object
 onObject = lens
     (\ model ->
-        (model ^. modelObjects ) V.! (fromJust $ model ^. modelCurrentObject))
+        (model ^. modelObjects ) V.! fromJust (model ^. modelCurrentObject))
     (\ model mesh -> model & modelObjects
         .~ (model ^. modelObjects ) V.//
             [(fromJust $ model ^. modelCurrentObject, mesh)] )
