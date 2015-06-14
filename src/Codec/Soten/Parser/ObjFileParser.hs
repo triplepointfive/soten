@@ -121,14 +121,37 @@ getComment :: Model -> Model
 getComment = id
 
 getMaterialDesc :: String -> Model -> Model
-getMaterialDesc = undefined
+getMaterialDesc matName = setMaterial . setUninitializedObject
+  where
+    setUninitializedObject :: Model -> Model
+    setUninitializedObject model
+        | currentObjPresent && (moreThanOneMesh || meshHasFaces)
+            = model & modelCurrentObject .~ Nothing
+        | otherwise = model
+      where
+        currentObj :: Object
+        currentObj = model ^. onObject
+
+        objMesh :: Mesh
+        objMesh = (model ^. modelMeshes) V.! head (currentObj ^. objectMeshes)
+
+        currentObjPresent, moreThanOneMesh, meshHasFaces :: Bool
+        currentObjPresent = isJust (model ^. modelCurrentObject)
+        moreThanOneMesh = length (currentObj ^. objectMeshes) > 1
+        meshHasFaces = length (currentObj ^. objectMeshes) == 1
+            && not (V.null (objMesh ^. meshFaces))
+
+    setMaterial :: Model -> Model
+    setMaterial model = case Map.lookup matName (model ^. modelMaterialMap) of
+        Just material -> undefined
+        Nothing       -> undefined
 
 -- Not used
 getGroupNumberAndResolution :: String -> Model -> Model
 getGroupNumberAndResolution _ = id
 
 getMaterialLib :: String -> Model -> Model
-getMaterialLib = undefined
+getMaterialLib strMatName = undefined
 
 getGroupName :: String -> Model -> Model
 getGroupName line model
