@@ -133,7 +133,12 @@ getMaterialLib :: String -> Model -> Model
 getMaterialLib = undefined
 
 getGroupName :: String -> Model -> Model
-getGroupName = undefined
+getGroupName line model
+    | line == model ^. modelActiveGroup = model
+    | otherwise = setActiveGroup $ setGroup line $ createObject line model
+  where
+    setActiveGroup :: Model -> Model
+    setActiveGroup model = model & modelActiveGroup .~ line
 
 -- Not used
 getGroupNumber :: String -> Model -> Model
@@ -185,6 +190,12 @@ setCurrentMesh :: Model -> Model
 setCurrentMesh model
     | isJust (model ^. modelCurrentMesh) = model
     | otherwise = createMesh model
+
+-- Assign modelGroupFaceIDs?
+setGroup :: String -> Model -> Model
+setGroup groupName model
+    | Map.member groupName (model ^. modelGroups) = model
+    | otherwise = model & modelGroups %~ Map.insert groupName (V.empty)
 
 -- TODO: UI data
 storeFace :: Face -> Model -> Model

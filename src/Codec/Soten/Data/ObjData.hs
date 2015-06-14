@@ -23,7 +23,7 @@ data TextureType
     | TextureTypeCount
     deriving Show
 
-type GroupMap = Map.Map String Int
+type GroupMap = Map.Map String (V.Vector Index)
 
 defaultMaterial = "DefaultMaterial"
 
@@ -129,8 +129,10 @@ data Model =
       -- | Group map
     , _modelGroups          :: !GroupMap
       -- | Group to face id assignment
+      -- TODO: Rethink of this field
     , _modelGroupFaceIDs    :: ![Int]
       -- | Active group
+      -- TODO: Rename to current
     , _modelActiveGroup     :: !String
       -- | Generated texture coordinates
     , _modelTextureCoord    :: ![V3 Float]
