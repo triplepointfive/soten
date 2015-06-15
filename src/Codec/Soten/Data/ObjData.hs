@@ -20,8 +20,7 @@ data TextureType
     | TextureSpecularityType
     | TextureOpacityType
     | TextureDispType
-    | TextureTypeCount
-    deriving Show
+    deriving (Show, Enum, Bounded, Ord, Eq)
 
 type GroupMap = Map.Map String (V.Vector Index)
 
@@ -42,7 +41,7 @@ data Material =
     , _materialTextureSpecularity :: !String
     , _materialTextureOpacity     :: !String
     , _materialTextureDisp        :: !String
-    , _meterialClamp              :: ![TextureType]
+    , _meterialClamp              :: !(Map.Map TextureType Bool)
       -- | Ambient color
     , _meterialAmbient            :: !Color3D
       -- | Diffuse color
@@ -198,7 +197,7 @@ newMaterial =
     , _materialTextureSpecularity = ""
     , _materialTextureOpacity     = ""
     , _materialTextureDisp        = ""
-    , _meterialClamp              = []
+    , _meterialClamp              = clamp
     , _meterialAmbient            = V3 0 0 0
     , _meterialDiffuse            = V3 0.6 0.6 0.6
     , _meterialSpecular           = V3 0 0 0
@@ -208,3 +207,5 @@ newMaterial =
     , _meterialIlluminationModel  = 1
     , _meterialIor                = 1
     }
+  where
+    clamp = Map.fromList (zip [minBound ..] (repeat False))

@@ -234,7 +234,7 @@ readMaterialLib matName model =
   where
     -- TODO: Log
     logAndSkip _ = return model
-    loadMaterial content = return (load content matName model )
+    loadMaterial content = return (load content model )
 
 -- TODO: UI data
 storeFace :: Face -> Model -> Model

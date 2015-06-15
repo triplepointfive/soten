@@ -1,3 +1,4 @@
+{-# LANGUAGE RankNTypes #-}
 module Codec.Soten.Parser.ObjMtlParser (
     load
 ) where
@@ -29,6 +30,28 @@ data MaterialToken
     | SpecularityTexture
     deriving Show
 
+instance Read MaterialToken where
+    readsPrec _ value = tryParse tokens
+      where
+        tokens =
+            [ (DiffuseTexture      , "map_Kd")
+            , (AmbientTexture      , "map_Ka")
+            , (SpecularTexture     , "map_Ks")
+            , (OpacityTexture      , "map_d")
+            , (EmmissiveTexture    , "map_emissive")
+            , (BumpTexture1        , "map_bump")
+            , (BumpTexture2        , "map_Bump")
+            , (BumpTexture3        , "bump")
+            , (NormalTexture       , "map_Kn")
+            , (DisplacementTexture , "disp")
+            , (SpecularityTexture  , "map_ns")
+            ]
+        tryParse [] = []
+        tryParse ((result, attempt):xs) =
+            if (take (length attempt) value) == attempt
+                then [(result, drop (length attempt) value)]
+                else tryParse xs
+
 -- | Texture option specific token
 data TextureToken
     = BlendUOption
@@ -45,36 +68,33 @@ data TextureToken
     | TypeOption
     deriving Show
 
--- DiffuseTexture      = "map_Kd"
--- AmbientTexture      = "map_Ka"
--- SpecularTexture     = "map_Ks"
--- OpacityTexture      = "map_d"
--- EmmissiveTexture    = "map_emissive"
--- BumpTexture1        = "map_bump"
--- BumpTexture2        = "map_Bump"
--- BumpTexture3        = "bump"
--- NormalTexture       = "map_Kn"
--- DisplacementTexture = "disp"
--- SpecularityTexture  = "map_ns"
-
--- BlendUOption		= "-blendu"
--- BlendVOption		= "-blendv"
--- BoostOption		= "-boost"
--- ModifyMapOption	= "-mm"
--- OffsetOption		= "-o"
--- ScaleOption		= "-s"
--- TurbulenceOption	= "-t"
--- ResolutionOption	= "-texres"
--- ClampOption		= "-clamp"
--- BumpOption			= "-bm"
--- ChannelOption		= "-imfchan"
--- TypeOption			= "-type"
+instance Read TextureToken where
+    readsPrec _ value = tryParse tokens
+      where
+        tokens =
+            [ (BlendUOption     , "-blendu")
+            , (BlendVOption     , "-blendv")
+            , (BoostOption      , "-boost")
+            , (ModifyMapOption  , "-mm")
+            , (OffsetOption     , "-o")
+            , (ScaleOption      , "-s")
+            , (TurbulenceOption , "-t")
+            , (ResolutionOption , "-texres")
+            , (ClampOption      , "-clamp")
+            , (BumpOption       , "-bm")
+            , (ChannelOption    , "-imfchan")
+            , (TypeOption       , "-type")
+            ]
+        tryParse [] = []
+        tryParse ((result, attempt):xs) =
+            if (take (length attempt) value) == attempt
+                then [(result, drop (length attempt) value)]
+                else tryParse xs
 
 load :: String -- ^ File content
-     -> String -- ^ Material name
      -> Model  -- ^ Model to which add material
      -> Model
-load content modelName model = foldl' (flip parseLine) model fileLines
+load content model = foldl' (flip parseLine) model fileLines
   where
     -- TODO: downcase first word
     fileLines = map replaceTabs (lines content)
@@ -87,11 +107,11 @@ parseLine ('k':'s':' ':xs) = setSpecularColor xs
 parseLine ('k':'e':' ':xs) = setEmissiveColor xs
 parseLine ('n':'s':' ':xs) = setShineness xs
 parseLine ('n':'i':' ':xs) = setIor xs
-parseLine ('n':'e':' ':xs) = createMaterial xs
+parseLine ('n':'e':'w':'m':'t':'l':' ':xs) = createMaterial xs
 parseLine ('d':' ':xs)     = setAlphaValue xs
-parseLine ('m':' ':xs)     = getTexture xs
-parseLine ('b':' ':xs)     = getTexture xs
-parseLine ('i':' ':xs)     = getIlluminationModel xs
+parseLine xs@('m':_)       = getTexture xs
+parseLine xs@('b':_)       = getTexture xs
+parseLine ('i':'l':'l':'u':'m':' ':xs)     = getIlluminationModel xs
 parseLine _ = id
 
 setAlphaValue :: String -> Model -> Model
@@ -138,7 +158,29 @@ createMaterial line model = (addMaterial model) & modelCurrentMaterial .~ name
         createdMaterial = newMaterial & materialName .~ name
 
 getTexture :: String -> Model -> Model
-getTexture = undefined
+getTexture line model = case readMay (head (split " " line)) of
+    Nothing -> model
+    Just matToken ->
+        let (clampType, out) = texture matToken in
+        model & onMaterial %~ out .~ textureName
+              & onMaterial %~ meterialClamp %~ Map.insert clampType clamp
+  where
+    clamp = getTextureOption line
+    textureName = last $ filter (not . null) $ split " " line
+
+    texture :: Functor f => MaterialToken -> (TextureType, (String -> f String) -> Material -> f Material)
+    texture DiffuseTexture      = (TextureDiffuseType, materialTexture)
+    texture AmbientTexture      = (TextureAmbientType, materialTextureAmbient)
+    texture SpecularTexture     = (TextureSpecularType, materialTextureSpecular)
+    texture OpacityTexture      = (TextureOpacityType, materialTextureOpacity)
+    texture EmmissiveTexture    = (TextureEmissiveType, materialTextureEmissive)
+    texture BumpTexture1        = (TextureBumpType, materialTextureBump)
+    texture BumpTexture2        = (TextureBumpType, materialTextureBump)
+    texture BumpTexture3        = (TextureBumpType, materialTextureBump)
+    texture NormalTexture       = (TextureNormalType, materialTextureNormal)
+    texture DisplacementTexture = (TextureDispType, materialTextureDisp)
+    texture SpecularityTexture  =
+        (TextureSpecularityType, materialTextureSpecularity)
 
 getIlluminationModel :: String -> Model -> Model
 getIlluminationModel = undefined
@@ -152,6 +194,9 @@ getColorRGBA :: String -> Color3D
 getColorRGBA line = case readMay ("V3 " ++ line) of
     Just color -> color
     Nothing    -> V3 0 0 0
+
+getTextureOption :: String -> Bool
+getTextureOption = undefined
 
 onMaterial :: Lens' Model Material
 onMaterial = lens
