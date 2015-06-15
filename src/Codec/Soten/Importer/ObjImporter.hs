@@ -3,16 +3,17 @@ module Codec.Soten.Importer.ObjImporter (
   , ObjImporter(..)
 ) where
 
-import Control.Monad (when)
-import System.Posix (getFileStatus, fileSize)
+import           Control.Monad (when)
+import           System.Posix (getFileStatus, fileSize)
 
-import Codec.Soten.Parser.ObjFileParser (Model(..), getModel)
-import Codec.Soten.Importer (searchFileHeaderForToken)
-import Codec.Soten.Util ( CheckType(..)
-                        , hasExtention
-                        , throw
-                        , DeadlyImporterError(..)
-                        )
+import           Codec.Soten.Parser.ObjFileParser (getModel)
+import           Codec.Soten.Data.ObjData
+import           Codec.Soten.Importer (searchFileHeaderForToken)
+import           Codec.Soten.Util ( CheckType(..)
+                 , hasExtention
+                 , throw
+                 , DeadlyImporterError(..)
+                 )
 
 data ObjImporter = ObjImporter
 

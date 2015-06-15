@@ -17,6 +17,7 @@ library
                      , Codec.Soten.Importer
                      , Codec.Soten.Importer.ObjImporter
                      , Codec.Soten.Parser.ObjFileParser
+                     , Codec.Soten.Parser.ObjMtlParser
                      , Codec.Soten.Primitive
                      , Codec.Soten.Types
                      , Codec.Soten.Util

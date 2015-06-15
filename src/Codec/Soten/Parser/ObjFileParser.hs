@@ -1,6 +1,5 @@
 module Codec.Soten.Parser.ObjFileParser (
-    Model(..)
-  , getModel
+    getModel
 ) where
 
 import           Data.List (foldl')
@@ -15,7 +14,8 @@ import           Safe (readMay)
 
 import           Codec.Soten.Primitive (PrimitiveType(..))
 import           Codec.Soten.Data.ObjData
-import           Codec.Soten.Util (nothing,
+import           Codec.Soten.Parser.ObjMtlParser (load)
+import           Codec.Soten.Util (nothing, tryReadFile,
                  throw, DeadlyImporterError(..)
                  )
 
@@ -227,6 +227,14 @@ createMeshIfNeeded matName model = if meshNeeded
     meshNeeded = meshBlank || meshWithoutMaterial
     meshBlank = isNothing (model ^. modelCurrentMesh)
     meshWithoutMaterial = model ^. onMesh ^. meshMaterial == Just matName
+
+readMaterialLib :: String -> Model -> IO Model
+readMaterialLib matName model =
+    tryReadFile matName >>= either logAndSkip loadMaterial
+  where
+    -- TODO: Log
+    logAndSkip _ = return model
+    loadMaterial content = return (load content matName model )
 
 -- TODO: UI data
 storeFace :: Face -> Model -> Model
