@@ -7,7 +7,7 @@ import qualified Data.Map as Map
 
 import           Control.Lens ((^.), (&), (%~), (.~), Lens', lens)
 import           Data.Maybe (isJust, isNothing, fromJust, fromMaybe)
-import           Data.String.Utils (split, strip)
+import           Data.String.Utils (split)
 import qualified Data.Vector as V
 import           Linear (V3(..))
 import           Safe (readMay)
@@ -15,7 +15,7 @@ import           Safe (readMay)
 import           Codec.Soten.Primitive (PrimitiveType(..))
 import           Codec.Soten.Data.ObjData
 import           Codec.Soten.Parser.ObjMtlParser (load)
-import           Codec.Soten.Util (nothing, tryReadFile,
+import           Codec.Soten.Util (tryReadFile,
                  throw, DeadlyImporterError(..)
                  )
 

@@ -7,6 +7,7 @@ import qualified Data.Map as Map
 
 import           Control.Lens ((^.), (&), (%~), (.~), Lens', lens)
 import           Data.Maybe (fromJust)
+import           Data.String.Utils (split)
 import           Linear (V3(..))
 import           Safe (readMay)
 
@@ -94,34 +95,58 @@ parseLine ('i':' ':xs)     = getIlluminationModel xs
 parseLine _ = id
 
 setAlphaValue :: String -> Model -> Model
-setAlphaValue = undefined
+setAlphaValue line model =
+    model & onMaterial %~ meterialAlpha .~ (getFloat line)
 
 setAmbientColor :: String -> Model -> Model
-setAmbientColor = undefined
+setAmbientColor line model =
+    model & onMaterial %~ meterialAmbient .~ (getColorRGBA line)
 
 setDiffuseColor :: String -> Model -> Model
-setDiffuseColor = undefined
+setDiffuseColor line model =
+    model & onMaterial %~ meterialDiffuse .~ (getColorRGBA line)
 
 setSpecularColor :: String -> Model -> Model
-setSpecularColor = undefined
+setSpecularColor line model =
+    model & onMaterial %~ meterialSpecular .~ (getColorRGBA line)
 
 setEmissiveColor :: String -> Model -> Model
-setEmissiveColor = undefined
+setEmissiveColor line model =
+    model & onMaterial %~ meterialEmissive .~ (getColorRGBA line)
 
 setShineness :: String -> Model -> Model
-setShineness = undefined
+setShineness line model =
+    model & onMaterial %~ meterialShineness .~ (getFloat line)
 
 setIor :: String -> Model -> Model
-setIor = undefined
+setIor line model =
+    model & onMaterial %~ meterialIor .~ (getFloat line)
 
 createMaterial :: String -> Model -> Model
-createMaterial = undefined
+createMaterial line model = (addMaterial model) & modelCurrentMaterial .~ name
+  where
+    name | length parsedLine >= 2 = parsedLine !! 1
+         | otherwise = defaultMaterial
+      where
+        parsedLine = filter (not . null) $ split " " line
+
+    addMaterial :: Model -> Model
+    addMaterial model = case Map.lookup name (model ^. modelMaterialMap) of
+        Just _  -> model
+        Nothing -> model & modelMaterialMap %~ Map.insert name createdMaterial
+      where
+        createdMaterial = newMaterial & materialName .~ name
 
 getTexture :: String -> Model -> Model
 getTexture = undefined
 
 getIlluminationModel :: String -> Model -> Model
 getIlluminationModel = undefined
+
+getFloat :: String -> Float
+getFloat line = case readMay line of
+    Just v  -> v
+    Nothing -> 0
 
 getColorRGBA :: String -> Color3D
 getColorRGBA line = case readMay ("V3 " ++ line) of
