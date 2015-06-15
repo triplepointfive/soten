@@ -7,7 +7,7 @@ import           Data.List (foldl')
 import qualified Data.Map as Map
 
 import           Control.Lens ((^.), (&), (%~), (.~), Lens', lens)
-import           Data.Maybe (isJust, fromJust, fromMaybe)
+import           Data.Maybe (isJust, isNothing, fromJust, fromMaybe)
 import           Data.String.Utils (split, strip)
 import qualified Data.Vector as V
 import           Linear (V3(..))
@@ -143,15 +143,17 @@ getMaterialDesc matName = setMaterial . setUninitializedObject
 
     setMaterial :: Model -> Model
     setMaterial model = case Map.lookup matName (model ^. modelMaterialMap) of
-        Just material -> undefined
-        Nothing       -> undefined
+        Just _  -> createMeshIfNeeded matName $
+            model & modelCurrentMaterial .~ matName
+        Nothing -> model & modelCurrentMaterial .~ defaultMaterial
+        -- TODO: Add to log "Failed to locate material"
 
 -- Not used
 getGroupNumberAndResolution :: String -> Model -> Model
 getGroupNumberAndResolution _ = id
 
 getMaterialLib :: String -> Model -> Model
-getMaterialLib strMatName = undefined
+getMaterialLib = undefined
 
 getGroupName :: String -> Model -> Model
 getGroupName line model
@@ -217,6 +219,14 @@ setGroup :: String -> Model -> Model
 setGroup groupName model
     | Map.member groupName (model ^. modelGroups) = model
     | otherwise = model & modelGroups %~ Map.insert groupName V.empty
+
+createMeshIfNeeded :: String -> Model -> Model
+createMeshIfNeeded matName model = if meshNeeded
+    then createMesh model else model
+  where
+    meshNeeded = meshBlank || meshWithoutMaterial
+    meshBlank = isNothing (model ^. modelCurrentMesh)
+    meshWithoutMaterial = model ^. onMesh ^. meshMaterial == Just matName
 
 -- TODO: UI data
 storeFace :: Face -> Model -> Model
