@@ -48,7 +48,7 @@ instance Read MaterialToken where
             ]
         tryParse [] = []
         tryParse ((result, attempt):xs) =
-            if (take (length attempt) value) == attempt
+            if take (length attempt) value == attempt
                 then [(result, drop (length attempt) value)]
                 else tryParse xs
 
@@ -87,7 +87,7 @@ instance Read TextureToken where
             ]
         tryParse [] = []
         tryParse ((result, attempt):xs) =
-            if (take (length attempt) value) == attempt
+            if take (length attempt) value == attempt
                 then [(result, drop (length attempt) value)]
                 else tryParse xs
 
@@ -116,34 +116,34 @@ parseLine _ = id
 
 setAlphaValue :: String -> Model -> Model
 setAlphaValue line model =
-    model & onMaterial %~ meterialAlpha .~ (getFloat line)
+    model & onMaterial %~ meterialAlpha .~ getFloat line
 
 setAmbientColor :: String -> Model -> Model
 setAmbientColor line model =
-    model & onMaterial %~ meterialAmbient .~ (getColorRGBA line)
+    model & onMaterial %~ meterialAmbient .~ getColorRGBA line
 
 setDiffuseColor :: String -> Model -> Model
 setDiffuseColor line model =
-    model & onMaterial %~ meterialDiffuse .~ (getColorRGBA line)
+    model & onMaterial %~ meterialDiffuse .~ getColorRGBA line
 
 setSpecularColor :: String -> Model -> Model
 setSpecularColor line model =
-    model & onMaterial %~ meterialSpecular .~ (getColorRGBA line)
+    model & onMaterial %~ meterialSpecular .~ getColorRGBA line
 
 setEmissiveColor :: String -> Model -> Model
 setEmissiveColor line model =
-    model & onMaterial %~ meterialEmissive .~ (getColorRGBA line)
+    model & onMaterial %~ meterialEmissive .~ getColorRGBA line
 
 setShineness :: String -> Model -> Model
 setShineness line model =
-    model & onMaterial %~ meterialShineness .~ (getFloat line)
+    model & onMaterial %~ meterialShineness .~ getFloat line
 
 setIor :: String -> Model -> Model
 setIor line model =
-    model & onMaterial %~ meterialIor .~ (getFloat line)
+    model & onMaterial %~ meterialIor .~ getFloat line
 
 createMaterial :: String -> Model -> Model
-createMaterial line model = (addMaterial model) & modelCurrentMaterial .~ name
+createMaterial line model = addMaterial model & modelCurrentMaterial .~ name
   where
     name | length parsedLine >= 2 = parsedLine !! 1
          | otherwise = defaultMaterial
@@ -183,17 +183,14 @@ getTexture line model = case readMay (head (split " " line)) of
         (TextureSpecularityType, materialTextureSpecularity)
 
 getIlluminationModel :: String -> Model -> Model
-getIlluminationModel = undefined
+getIlluminationModel line model =
+    model & onMaterial %~ meterialIor .~ getFloat line
 
 getFloat :: String -> Float
-getFloat line = case readMay line of
-    Just v  -> v
-    Nothing -> 0
+getFloat line = fromMaybe 0 (readMay line)
 
 getColorRGBA :: String -> Color3D
-getColorRGBA line = case readMay ("V3 " ++ line) of
-    Just color -> color
-    Nothing    -> V3 0 0 0
+getColorRGBA line = fromMaybe (V3 0 0 0) (readMay ("V3 " ++ line))
 
 getTextureOption :: String -> Bool
 getTextureOption = undefined
