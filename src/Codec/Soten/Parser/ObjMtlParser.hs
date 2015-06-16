@@ -5,9 +5,9 @@ module Codec.Soten.Parser.ObjMtlParser (
 
 import           Data.List (foldl')
 import qualified Data.Map as Map
+import           Data.Maybe (fromJust, fromMaybe)
 
 import           Control.Lens ((^.), (&), (%~), (.~), Lens', lens)
-import           Data.Maybe (fromJust)
 import           Data.String.Utils (split)
 import           Linear (V3(..))
 import           Safe (readMay)
@@ -45,45 +45,6 @@ instance Read MaterialToken where
             , (NormalTexture       , "map_Kn")
             , (DisplacementTexture , "disp")
             , (SpecularityTexture  , "map_ns")
-            ]
-        tryParse [] = []
-        tryParse ((result, attempt):xs) =
-            if take (length attempt) value == attempt
-                then [(result, drop (length attempt) value)]
-                else tryParse xs
-
--- | Texture option specific token
-data TextureToken
-    = BlendUOption
-    | BlendVOption
-    | BoostOption
-    | ModifyMapOption
-    | OffsetOption
-    | ScaleOption
-    | TurbulenceOption
-    | ResolutionOption
-    | ClampOption
-    | BumpOption
-    | ChannelOption
-    | TypeOption
-    deriving Show
-
-instance Read TextureToken where
-    readsPrec _ value = tryParse tokens
-      where
-        tokens =
-            [ (BlendUOption     , "-blendu")
-            , (BlendVOption     , "-blendv")
-            , (BoostOption      , "-boost")
-            , (ModifyMapOption  , "-mm")
-            , (OffsetOption     , "-o")
-            , (ScaleOption      , "-s")
-            , (TurbulenceOption , "-t")
-            , (ResolutionOption , "-texres")
-            , (ClampOption      , "-clamp")
-            , (BumpOption       , "-bm")
-            , (ChannelOption    , "-imfchan")
-            , (TypeOption       , "-type")
             ]
         tryParse [] = []
         tryParse ((result, attempt):xs) =
@@ -160,27 +121,7 @@ createMaterial line model = addMaterial model & modelCurrentMaterial .~ name
 getTexture :: String -> Model -> Model
 getTexture line model = case readMay (head (split " " line)) of
     Nothing -> model
-    Just matToken ->
-        let (clampType, out) = texture matToken in
-        model & onMaterial %~ out .~ textureName
-              & onMaterial %~ meterialClamp %~ Map.insert clampType clamp
-  where
-    clamp = getTextureOption line
-    textureName = last $ filter (not . null) $ split " " line
-
-    texture :: Functor f => MaterialToken -> (TextureType, (String -> f String) -> Material -> f Material)
-    texture DiffuseTexture      = (TextureDiffuseType, materialTexture)
-    texture AmbientTexture      = (TextureAmbientType, materialTextureAmbient)
-    texture SpecularTexture     = (TextureSpecularType, materialTextureSpecular)
-    texture OpacityTexture      = (TextureOpacityType, materialTextureOpacity)
-    texture EmmissiveTexture    = (TextureEmissiveType, materialTextureEmissive)
-    texture BumpTexture1        = (TextureBumpType, materialTextureBump)
-    texture BumpTexture2        = (TextureBumpType, materialTextureBump)
-    texture BumpTexture3        = (TextureBumpType, materialTextureBump)
-    texture NormalTexture       = (TextureNormalType, materialTextureNormal)
-    texture DisplacementTexture = (TextureDispType, materialTextureDisp)
-    texture SpecularityTexture  =
-        (TextureSpecularityType, materialTextureSpecularity)
+    Just matToken -> setTextureToken line matToken model
 
 getIlluminationModel :: String -> Model -> Model
 getIlluminationModel line model =
@@ -192,9 +133,6 @@ getFloat line = fromMaybe 0 (readMay line)
 getColorRGBA :: String -> Color3D
 getColorRGBA line = fromMaybe (V3 0 0 0) (readMay ("V3 " ++ line))
 
-getTextureOption :: String -> Bool
-getTextureOption = undefined
-
 onMaterial :: Lens' Model Material
 onMaterial = lens
     (\ model ->
@@ -203,3 +141,32 @@ onMaterial = lens
     (\ model material -> model & modelMaterialMap
         .~ Map.insert (model ^. modelCurrentMaterial)
         material (model ^. modelMaterialMap ))
+
+setTextureToken :: String -> MaterialToken -> Model -> Model
+setTextureToken line matToken model =
+    model & onMaterial %~ out .~ textureName
+          & onMaterial %~ meterialClamp %~ Map.insert clampType clamp
+  where
+    (clampType, out) = texture matToken
+    clamp = getTextureOption (init tokens)
+    textureName = last tokens
+    tokens = filter (not . null) $ split " " line
+
+getTextureOption :: [String] -> Bool
+getTextureOption []                  = False
+getTextureOption ["-clamp", flag, _] = flag == "on"
+getTextureOption (_:xs)              = getTextureOption xs
+
+texture :: Functor f => MaterialToken -> (TextureType, (String -> f String) -> Material -> f Material)
+texture DiffuseTexture      = (TextureDiffuseType, materialTexture)
+texture AmbientTexture      = (TextureAmbientType, materialTextureAmbient)
+texture SpecularTexture     = (TextureSpecularType, materialTextureSpecular)
+texture OpacityTexture      = (TextureOpacityType, materialTextureOpacity)
+texture EmmissiveTexture    = (TextureEmissiveType, materialTextureEmissive)
+texture BumpTexture1        = (TextureBumpType, materialTextureBump)
+texture BumpTexture2        = (TextureBumpType, materialTextureBump)
+texture BumpTexture3        = (TextureBumpType, materialTextureBump)
+texture NormalTexture       = (TextureNormalType, materialTextureNormal)
+texture DisplacementTexture = (TextureDispType, materialTextureDisp)
+texture SpecularityTexture  =
+    (TextureSpecularityType, materialTextureSpecularity)
