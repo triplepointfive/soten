@@ -1,13 +1,38 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Codec.Soten.Scene (
     Node(..)
+  , nodeName
+  , nodeTransformation
+  , nodeChildren
+  , nodeMeshes
+  , nodeMetaData
+  , newNode
   , findNode
+
+  , SceneFlags(..)
+
+  , Scene(..)
+  , sceneFlags
+  , sceneRoorNode
+  , sceneMeshes
+  , sceneMaterials
+  , sceneAnimations
+  , sceneTextures
+  , sceneLights
+  , sceneCamera
+  , newScene
+  , hasMeshes
+  , hasMaterials
+  , hasLights
+  , hasTextures
+  , hasCameras
+  , hasAnimations
 ) where
 
 import           Data.Maybe (isJust)
 import           Control.Monad (join)
 
-import           Control.Lens (makeLenses, (&), (^.))
+import           Control.Lens (makeLenses, (^.))
 import qualified Data.Vector as V
 import           Linear.Matrix (M44)
 
@@ -50,3 +75,84 @@ findNode name node
   where
     searchedChildren :: V.Vector (Maybe Node)
     searchedChildren = V.map (findNode name) (node ^. nodeChildren)
+
+-- | Sets scene's state.
+data SceneFlags
+      -- | Imported data structure is not complete.
+    = SceneIncomplete
+      -- | The validation is successful.
+    | SceneValidated
+      -- | The validation is successful but some issues have been found.
+    | SceneValidationWarning
+      -- | The vertices of the output meshes aren't in the internal
+      -- verbose format anymore
+    | SceneNonVerboseFormat
+      -- | Denotes pure height-map terrain data.
+    | SceneTerrain
+    deriving Show
+
+data Mesh = Mesh           -- TODO: Implement me
+data Material = Material   -- TODO: Implement me
+data Animation = Animation -- TODO: Implement me
+data Texture = Texture     -- TODO: Implement me
+data Light = Light         -- TODO: Implement me
+data Camera = Camera       -- TODO: Implement me
+
+-- | The root structure of the imported data.
+data Scene =
+    Scene
+    { -- | The array of the SceneFlags.
+      _sceneFlags      :: !(V.Vector SceneFlags)
+      -- | The root node of the hierarchy.
+    , _sceneRoorNode   :: !(Maybe Node)
+      -- | The array of meshes.
+    , _sceneMeshes     :: !(V.Vector Mesh)
+      -- | The array of materials.
+    , _sceneMaterials  :: !(V.Vector Material)
+      -- | The array of animations.
+    , _sceneAnimations :: !(V.Vector Animation)
+      -- | The array of embedded textures.
+    , _sceneTextures   :: !(V.Vector Texture)
+      -- | The array of light sources.
+    , _sceneLights     :: !(V.Vector Light)
+      -- | The array of cameras.
+    , _sceneCamera     :: !(V.Vector Camera)
+    }
+makeLenses ''Scene
+
+newScene :: Scene
+newScene =
+    Scene
+    { _sceneFlags      = V.empty
+    , _sceneRoorNode   = Nothing
+    , _sceneMeshes     = V.empty
+    , _sceneMaterials  = V.empty
+    , _sceneAnimations = V.empty
+    , _sceneTextures   = V.empty
+    , _sceneLights     = V.empty
+    , _sceneCamera     = V.empty
+    }
+
+-- | Check whether the scene contains meshes
+hasMeshes :: Scene -> Bool
+hasMeshes scene = not (V.null (scene ^. sceneMeshes))
+
+-- | Check whether the scene contains materials
+hasMaterials :: Scene -> Bool
+hasMaterials scene = not (V.null (scene ^. sceneMaterials))
+
+-- | Check whether the scene contains lights
+hasLights :: Scene -> Bool
+hasLights scene = not (V.null (scene ^. sceneLights))
+
+-- | Check whether the scene contains textures
+hasTextures :: Scene -> Bool
+hasTextures scene = not (V.null (scene ^. sceneTextures))
+
+-- | Check whether the scene contains cameras
+hasCameras :: Scene -> Bool
+hasCameras scene = not (V.null (scene ^. sceneCamera))
+
+-- | Check whether the scene contains animations
+hasAnimations :: Scene -> Bool
+hasAnimations scene = not (V.null (scene ^. sceneCamera))
