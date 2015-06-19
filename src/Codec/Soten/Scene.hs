@@ -28,6 +28,8 @@ module Codec.Soten.Scene (
   , hasCameras
   , hasAnimations
 
+  , Camera(..)
+  , MetaData(..)
   , Texture(..)
 ) where
 
@@ -38,8 +40,9 @@ import           Control.Lens (makeLenses, (^.))
 import qualified Data.Vector as V
 import           Linear.Matrix (M44)
 
-import           Codec.Soten.Internal.Texture (Texture(..))
+import           Codec.Soten.Internal.Camera (Camera(..))
 import           Codec.Soten.Internal.MetaData (MetaData(..))
+import           Codec.Soten.Internal.Texture (Texture(..))
 import           Codec.Soten.Types (Index)
 
 -- | A node in the imported hierarchy.
@@ -98,7 +101,6 @@ data Mesh = Mesh           -- TODO: Implement me
 data Material = Material   -- TODO: Implement me
 data Animation = Animation -- TODO: Implement me
 data Light = Light         -- TODO: Implement me
-data Camera = Camera       -- TODO: Implement me
 
 -- | The root structure of the imported data.
 data Scene =
