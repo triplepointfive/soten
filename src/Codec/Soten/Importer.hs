@@ -23,3 +23,5 @@ searchFileHeaderForToken filePath tokens =
     searchHeader :: B.ByteString -> IO Bool
     searchHeader context = return $ any (`B.isInfixOf ` context) listTokens
       where listTokens = map B.pack tokens
+
+
