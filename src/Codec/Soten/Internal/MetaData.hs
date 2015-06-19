@@ -1,4 +1,4 @@
-module Codec.Soten.MetaData (
+module Codec.Soten.Internal.MetaData (
     MetaData(..)
 ) where
 
