@@ -16,10 +16,12 @@ library
                      , Codec.Soten.FileImporter
                      , Codec.Soten.Importer
                      , Codec.Soten.Importer.ObjImporter
+                     , Codec.Soten.MetaData
                      , Codec.Soten.Parser.ObjFileParser
                      , Codec.Soten.Parser.ObjMtlParser
                      , Codec.Soten.PostProcess
                      , Codec.Soten.Primitive
+                     , Codec.Soten.Scene
                      , Codec.Soten.Types
                      , Codec.Soten.Util
   build-depends:       base >=4.8 && <4.9

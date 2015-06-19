@@ -29,7 +29,7 @@ defaultMaterial = "DefaultMaterial"
 -- | Data structure to store all material specific data
 data Material =
     Material
-    { -- Name of material description
+    { -- | Name of material description
       _materialName               :: !String
       -- | Texture names
     , _materialTexture            :: !String
