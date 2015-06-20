@@ -12,8 +12,8 @@ module Codec.Soten.Internal.Camera (
   , newCamera
 ) where
 
-import           Linear (V3(..))
 import           Control.Lens (makeLenses)
+import           Linear (V3(..))
 
 -- | Helper structure to describe a virtual camera.
 data Camera =

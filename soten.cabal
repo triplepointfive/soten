@@ -17,6 +17,7 @@ library
                      , Codec.Soten.Importer
                      , Codec.Soten.Importer.ObjImporter
                      , Codec.Soten.Internal.Camera
+                     , Codec.Soten.Internal.Light
                      , Codec.Soten.Internal.MetaData
                      , Codec.Soten.Internal.Texture
                      , Codec.Soten.Parser.ObjFileParser
