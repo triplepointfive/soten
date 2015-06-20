@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Codec.Soten.Internal.Light (
     LightSource(..)
-    
+
   , Light(..)
   , lightName
   , lightType

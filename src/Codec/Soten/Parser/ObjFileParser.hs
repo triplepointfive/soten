@@ -12,7 +12,7 @@ import qualified Data.Vector as V
 import           Linear (V3(..))
 import           Safe (readMay)
 
-import           Codec.Soten.Primitive (PrimitiveType(..))
+import           Codec.Soten.Internal.Mesh (PrimitiveType(..))
 import           Codec.Soten.Data.ObjData
 import           Codec.Soten.Parser.ObjMtlParser (load)
 import           Codec.Soten.Util (tryReadFile,

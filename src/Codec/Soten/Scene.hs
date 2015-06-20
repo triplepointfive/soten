@@ -30,6 +30,7 @@ module Codec.Soten.Scene (
 
   , Camera(..)
   , Light(..)
+  , Mesh(..)
   , MetaData(..)
   , Texture(..)
 ) where
@@ -43,6 +44,7 @@ import           Linear.Matrix (M44)
 
 import           Codec.Soten.Internal.Camera (Camera(..))
 import           Codec.Soten.Internal.Light (Light(..))
+import           Codec.Soten.Internal.Mesh (Mesh(..))
 import           Codec.Soten.Internal.MetaData (MetaData(..))
 import           Codec.Soten.Internal.Texture (Texture(..))
 import           Codec.Soten.Types (Index)
@@ -99,7 +101,6 @@ data SceneFlags
     | SceneTerrain
     deriving Show
 
-data Mesh = Mesh           -- TODO: Implement me
 data Material = Material   -- TODO: Implement me
 data Animation = Animation -- TODO: Implement me
 

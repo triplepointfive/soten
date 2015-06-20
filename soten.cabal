@@ -18,12 +18,12 @@ library
                      , Codec.Soten.Importer.ObjImporter
                      , Codec.Soten.Internal.Camera
                      , Codec.Soten.Internal.Light
+                     , Codec.Soten.Internal.Mesh
                      , Codec.Soten.Internal.MetaData
                      , Codec.Soten.Internal.Texture
                      , Codec.Soten.Parser.ObjFileParser
                      , Codec.Soten.Parser.ObjMtlParser
                      , Codec.Soten.PostProcess
-                     , Codec.Soten.Primitive
                      , Codec.Soten.Scene
                      , Codec.Soten.Types
                      , Codec.Soten.Util
