@@ -6,7 +6,7 @@ module Codec.Soten.Internal.Mesh (
   , faceIndices
 
   , VertexWeight(..)
-  , vertexWeightId    
+  , vertexWeightId
   , vertexWeightWeight
 
   , Bone(..)

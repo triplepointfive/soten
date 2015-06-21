@@ -16,6 +16,7 @@ library
                      , Codec.Soten.FileImporter
                      , Codec.Soten.Importer
                      , Codec.Soten.Importer.ObjImporter
+                     , Codec.Soten.Internal.Anim
                      , Codec.Soten.Internal.Camera
                      , Codec.Soten.Internal.Light
                      , Codec.Soten.Internal.Mesh
