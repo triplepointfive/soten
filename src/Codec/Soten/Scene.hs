@@ -31,6 +31,7 @@ module Codec.Soten.Scene (
   , Animation(..)
   , Camera(..)
   , Light(..)
+  , Material(..)
   , Mesh(..)
   , MetaData(..)
   , Texture(..)
@@ -46,6 +47,7 @@ import           Linear.Matrix (M44)
 import           Codec.Soten.Internal.Anim (Animation(..))
 import           Codec.Soten.Internal.Camera (Camera(..))
 import           Codec.Soten.Internal.Light (Light(..))
+import           Codec.Soten.Internal.Material (Material(..))
 import           Codec.Soten.Internal.Mesh (Mesh(..))
 import           Codec.Soten.Internal.MetaData (MetaData(..))
 import           Codec.Soten.Internal.Texture (Texture(..))
@@ -102,8 +104,6 @@ data SceneFlags
       -- | Denotes pure height-map terrain data.
     | SceneTerrain
     deriving Show
-
-data Material = Material   -- TODO: Implement me
 
 -- | The root structure of the imported data.
 data Scene =

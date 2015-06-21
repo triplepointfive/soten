@@ -19,6 +19,7 @@ library
                      , Codec.Soten.Internal.Anim
                      , Codec.Soten.Internal.Camera
                      , Codec.Soten.Internal.Light
+                     , Codec.Soten.Internal.Material
                      , Codec.Soten.Internal.Mesh
                      , Codec.Soten.Internal.MetaData
                      , Codec.Soten.Internal.Texture
