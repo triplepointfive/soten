@@ -1,27 +1,34 @@
+-- | Defines Importer API
 module Codec.Soten.Importer (
-    searchFileHeaderForToken
-) where
+    readModelFile
+)where
 
-import           Control.Exception (IOException, try)
-import           Data.Char (toLower)
+import qualified Data.Map as Map
 
-import qualified Data.ByteString.Char8 as B
+import           Linear.Matrix (M44)
 
-searchFileHeaderForToken :: FilePath -> [String] -> IO Bool
-searchFileHeaderForToken filePath tokens =
-    tryReadFile >>= either failSearch searchHeader
-  where
-    tryReadFile :: IO (Either IOException B.ByteString)
-    tryReadFile = try (fmap proceedFile (B.readFile filePath))
+-- TODO: Add post process registry
+import           Codec.Soten.Internal.ImporterRegistry (getImporterInstanceList)
+import           Codec.Soten.Scene (Scene(..))
 
-    proceedFile :: B.ByteString -> B.ByteString
-    proceedFile = B.map toLower . B.take searchBytes
-      where searchBytes = 200
+readModelFile :: FilePath -> Either Scene String
+readModelFile = undefined
 
-    failSearch _ = return False
+-- | Data type to store the key hash
+type Key = Int
 
-    searchHeader :: B.ByteString -> IO Bool
-    searchHeader context = return $ any (`B.isInfixOf ` context) listTokens
-      where listTokens = map B.pack tokens
-
+-- | Forms the Importer structure
+data Importer =
+    Importer
+    { -- | The imported data.
+      _importerScene          :: !Scene
+      -- | List of integer properties.
+    , _importerIntProperty    :: !(Map.Map Key Int)
+      -- | List of floating-point properties
+    , _importerFloatProperty  :: !(Map.Map Key Float)
+      -- | List of string properties
+    , _importerStringProperty :: !(Map.Map Key String)
+      -- | List of Matrix properties
+    , _importerMatrixProperty :: !(Map.Map Key (M44 Float))
+    }
 

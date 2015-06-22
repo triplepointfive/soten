@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Codec.Soten.Internal.Anim (
+module Codec.Soten.Scene.Anim (
     VectorKey(..)
   , vectorKeyTime
   , vectorValue

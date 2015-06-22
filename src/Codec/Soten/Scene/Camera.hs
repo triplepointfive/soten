@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Codec.Soten.Internal.Camera (
+module Codec.Soten.Scene.Camera (
     Camera(..)
   , cameraName
   , cameraPosition

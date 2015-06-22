@@ -1,6 +1,5 @@
 module Codec.Soten.Importer.ObjImporter (
-    canImport
-  , ObjImporter(..)
+    ObjImporter(..)
 ) where
 
 import           Control.Monad (when)
@@ -8,7 +7,10 @@ import           System.Posix (getFileStatus, fileSize)
 
 import           Codec.Soten.Parser.ObjFileParser (getModel)
 import           Codec.Soten.Data.ObjData
-import           Codec.Soten.Importer (searchFileHeaderForToken)
+import           Codec.Soten.BaseImporter (
+                   BaseImporter(..)
+                 , searchFileHeaderForToken
+                 )
 import           Codec.Soten.Util ( CheckType(..)
                  , hasExtention
                  , throw
@@ -17,11 +19,11 @@ import           Codec.Soten.Util ( CheckType(..)
 
 data ObjImporter = ObjImporter
 
-canImport :: FilePath -> CheckType -> IO Bool
-canImport filePath CheckExtension = return $ hasExtention filePath [".obj"]
-canImport filePath CheckHeader    = searchFileHeaderForToken filePath tokens
-  where
-    tokens = ["mtllib", "usemtl", "v ", "vt ", "vn ", "o ", "g ", "s ", "f "]
+instance BaseImporter ObjImporter where
+  canImport _ filePath CheckExtension = return $ hasExtention filePath [".obj"]
+  canImport _ filePath CheckHeader    = searchFileHeaderForToken filePath tokens
+    where
+      tokens = ["mtllib", "usemtl", "v ", "vt ", "vn ", "o ", "g ", "s ", "f "]
 
 internalReadFile :: FilePath -> IO ObjImporter
 internalReadFile filePath = do

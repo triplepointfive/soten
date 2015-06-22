@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Codec.Soten.Internal.Texture (
+module Codec.Soten.Scene.Texture (
     Texel(..)
   , texelA
   , texelR

@@ -7,7 +7,7 @@ import           Control.Lens (makeLenses)
 import qualified Data.Vector as V
 import           Linear (V3(..))
 
-import           Codec.Soten.Internal.Mesh (PrimitiveType(..))
+import           Codec.Soten.Scene.Mesh (PrimitiveType(..))
 import           Codec.Soten.Types (Color3D, Index)
 
 data TextureType

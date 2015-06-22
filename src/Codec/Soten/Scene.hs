@@ -44,13 +44,13 @@ import           Control.Lens (makeLenses, (^.))
 import qualified Data.Vector as V
 import           Linear.Matrix (M44)
 
-import           Codec.Soten.Internal.Anim (Animation(..))
-import           Codec.Soten.Internal.Camera (Camera(..))
-import           Codec.Soten.Internal.Light (Light(..))
-import           Codec.Soten.Internal.Material (Material(..))
-import           Codec.Soten.Internal.Mesh (Mesh(..))
-import           Codec.Soten.Internal.MetaData (MetaData(..))
-import           Codec.Soten.Internal.Texture (Texture(..))
+import           Codec.Soten.Scene.Anim (Animation(..))
+import           Codec.Soten.Scene.Camera (Camera(..))
+import           Codec.Soten.Scene.Light (Light(..))
+import           Codec.Soten.Scene.Material (Material(..))
+import           Codec.Soten.Scene.Mesh (Mesh(..))
+import           Codec.Soten.Scene.MetaData (MetaData(..))
+import           Codec.Soten.Scene.Texture (Texture(..))
 import           Codec.Soten.Types (Index)
 
 -- | A node in the imported hierarchy.

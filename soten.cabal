@@ -12,17 +12,19 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:     Codec.Soten
+                     , Codec.Soten.BaseImporter
                      , Codec.Soten.Data.ObjData
                      , Codec.Soten.FileImporter
                      , Codec.Soten.Importer
                      , Codec.Soten.Importer.ObjImporter
-                     , Codec.Soten.Internal.Anim
-                     , Codec.Soten.Internal.Camera
-                     , Codec.Soten.Internal.Light
-                     , Codec.Soten.Internal.Material
-                     , Codec.Soten.Internal.Mesh
-                     , Codec.Soten.Internal.MetaData
-                     , Codec.Soten.Internal.Texture
+                     , Codec.Soten.Internal.ImporterRegistry
+                     , Codec.Soten.Scene.Anim
+                     , Codec.Soten.Scene.Camera
+                     , Codec.Soten.Scene.Light
+                     , Codec.Soten.Scene.Material
+                     , Codec.Soten.Scene.Mesh
+                     , Codec.Soten.Scene.MetaData
+                     , Codec.Soten.Scene.Texture
                      , Codec.Soten.Parser.ObjFileParser
                      , Codec.Soten.Parser.ObjMtlParser
                      , Codec.Soten.PostProcess

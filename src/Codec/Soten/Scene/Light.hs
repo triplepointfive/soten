@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Codec.Soten.Internal.Light (
+module Codec.Soten.Scene.Light (
     LightSource(..)
 
   , Light(..)

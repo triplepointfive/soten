@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Codec.Soten.Internal.Material (
+module Codec.Soten.Scene.Material (
     TextureOp(..)
   , TextureMapMode(..)
   , TextureMapping(..)

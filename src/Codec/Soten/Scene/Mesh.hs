@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Codec.Soten.Internal.Mesh (
+module Codec.Soten.Scene.Mesh (
     PrimitiveType(..)
 
   , Face(..)
