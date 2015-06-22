@@ -2,4 +2,6 @@ module Codec.Soten.Internal.MetaData (
     MetaData(..)
 ) where
 
-data MetaData = MetaData
+data MetaData =
+    MetaData
+    deriving Show

@@ -30,6 +30,7 @@ data LightSource
     | LightPoint
     | LightSpot
     | LightAmbient
+    deriving Show
 
 -- | Helper structure to describe a light source.
 data Light =
@@ -58,7 +59,7 @@ data Light =
     , _lightAngleInnerCone       :: !Float
       -- | Outer angle of a spot light's light cone.
     , _lightAngleOuterCone       :: !Float
-    }
+    } deriving Show
 makeLenses ''Light
 
 newLight :: Light

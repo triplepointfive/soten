@@ -66,7 +66,7 @@ data Node =
     , _nodeMeshes         :: !(V.Vector Index)
       -- | Metadata associated with this node.
     , _nodeMetaData       :: !(Maybe MetaData)
-    }
+    } deriving Show
 makeLenses ''Node
 
 newNode :: Node
@@ -124,7 +124,7 @@ data Scene =
     , _sceneLights     :: !(V.Vector Light)
       -- | The array of cameras.
     , _sceneCamera     :: !(V.Vector Camera)
-    }
+    } deriving Show
 makeLenses ''Scene
 
 newScene :: Scene

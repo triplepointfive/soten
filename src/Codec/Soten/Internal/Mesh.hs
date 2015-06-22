@@ -74,7 +74,7 @@ data VertexWeight =
       _vertexWeightId     :: !Index
       -- | The strength of the influence in the range (0...1).
     , _vertexWeightWeight :: !Float
-    }
+    } deriving Show
 makeLenses ''VertexWeight
 
 -- | A single bone of a mesh.
@@ -86,7 +86,7 @@ data Bone =
     , _boneVertexWeights :: !(V.Vector VertexWeight)
       -- | Matrix that transforms from mesh space to bone space in bind pose.
     , _boneOffsetMatrix :: !(M44 Float)
-    }
+    } deriving Show
 makeLenses ''Bone
 
 -- | A mesh represents a geometry or model with a single material.
@@ -114,7 +114,7 @@ data Mesh =
     , _meshMaterialIndex  :: !(Maybe Index)
       -- | Name of the mesh.
     , _meshName           :: !String
-    }
+    } deriving Show
 makeLenses ''Mesh
 
 newMesh :: Mesh

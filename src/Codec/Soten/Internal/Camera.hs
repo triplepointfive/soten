@@ -36,7 +36,7 @@ data Camera =
     , _cameraClipPlaneFar  :: !Float
       -- | Screen aspect ratio.
     , _cameraAspect        :: !Float
-    }
+    } deriving Show
 makeLenses ''Camera
 
 newCamera :: Camera

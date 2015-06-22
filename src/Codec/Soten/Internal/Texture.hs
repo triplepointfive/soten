@@ -42,7 +42,7 @@ data Texture =
       -- | A hint from the loader to make it easier for applications
       -- to determine the type of embedded compressed textures.
     , _textureFormatHint :: !String
-    }
+    } deriving Show
 makeLenses ''Texture
 
 newTexture :: Texture

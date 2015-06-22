@@ -156,7 +156,7 @@ data Animation =
     , _animationChannels       :: !(V.Vector NodeAnim)
       -- | The mesh animation channels.
     , _animationMeshChannels   :: !(V.Vector MeshAnim)
-    }
+    } deriving Show
 makeLenses ''Animation
 
 newAnimation :: Animation
