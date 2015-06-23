@@ -1,7 +1,7 @@
 {-# LANGUAGE ExistentialQuantification #-}
 -- | Codec.Soten.Internal.ImporterRegistry
 module Codec.Soten.Internal.ImporterRegistry (
-    Importers
+    Importers(..)
   , getImporterInstanceList
 ) where
 
@@ -12,6 +12,9 @@ import           Codec.Soten.Importer.ObjImporter (ObjImporter(..))
 
 -- | Intermediate structure to include all instances of BaseImporter class.
 data Importers = forall a. BaseImporter a => Importers a
+
+instance Show Importers where
+  show (Importers importer) = show importer
 
 -- | Add an instance of each worker class here.
 getImporterInstanceList :: V.Vector Importers

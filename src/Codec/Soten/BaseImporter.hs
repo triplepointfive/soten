@@ -11,7 +11,7 @@ import qualified Data.ByteString.Char8 as B
 
 import           Codec.Soten.Util (CheckType)
 
-class BaseImporter a where
+class Show a => BaseImporter a where
   canImport :: a -> FilePath -> CheckType -> IO Bool
 
 searchFileHeaderForToken :: FilePath -> [String] -> IO Bool
@@ -30,5 +30,3 @@ searchFileHeaderForToken filePath tokens =
     searchHeader :: B.ByteString -> IO Bool
     searchHeader context = return $ any (`B.isInfixOf ` context) listTokens
       where listTokens = map B.pack tokens
-
-

@@ -15,7 +15,10 @@ import           Data.Char (toLower)
 import           Data.Typeable (Typeable)
 import           System.FilePath (takeExtension)
 
-data CheckType = CheckExtension | CheckHeader
+data CheckType
+    = CheckExtension
+    | CheckHeader
+    deriving Show
 
 hasExtention :: Foldable t => FilePath -> t String -> Bool
 hasExtention file = elem (map toLower (takeExtension file))

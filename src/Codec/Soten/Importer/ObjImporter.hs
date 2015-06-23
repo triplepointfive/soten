@@ -17,7 +17,9 @@ import           Codec.Soten.Util ( CheckType(..)
                  , DeadlyImporterError(..)
                  )
 
-data ObjImporter = ObjImporter
+data ObjImporter =
+    ObjImporter
+    deriving Show
 
 instance BaseImporter ObjImporter where
   canImport _ filePath CheckExtension = return $ hasExtention filePath [".obj"]
