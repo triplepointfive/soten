@@ -13,7 +13,7 @@ module Codec.Soten.Scene (
 
   , Scene(..)
   , sceneFlags
-  , sceneRoorNode
+  , sceneRootNode
   , sceneMeshes
   , sceneMaterials
   , sceneAnimations
@@ -111,7 +111,7 @@ data Scene =
     { -- | The array of the SceneFlags.
       _sceneFlags      :: !(V.Vector SceneFlags)
       -- | The root node of the hierarchy.
-    , _sceneRoorNode   :: !(Maybe Node)
+    , _sceneRootNode   :: !(Maybe Node)
       -- | The array of meshes.
     , _sceneMeshes     :: !(V.Vector Mesh)
       -- | The array of materials.
@@ -131,7 +131,7 @@ newScene :: Scene
 newScene =
     Scene
     { _sceneFlags      = V.empty
-    , _sceneRoorNode   = Nothing
+    , _sceneRootNode   = Nothing
     , _sceneMeshes     = V.empty
     , _sceneMaterials  = V.empty
     , _sceneAnimations = V.empty
