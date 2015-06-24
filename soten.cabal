@@ -15,6 +15,7 @@ library
                      , Codec.Soten.BaseImporter
                      , Codec.Soten.Data.ObjData
                      , Codec.Soten.FileImporter
+                     , Codec.Soten.ImportDesc
                      , Codec.Soten.Importer
                      , Codec.Soten.Importer.ObjImporter
                      , Codec.Soten.Internal.ImporterRegistry
