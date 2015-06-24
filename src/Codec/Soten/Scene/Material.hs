@@ -15,18 +15,18 @@ module Codec.Soten.Scene.Material (
   , newUVTransform
 
   , MaterialProperty(..)
-  , materialPropertySemantic
-  , materialPropertyIndex
+  , addProperty
 
   , Material(..)
   , materialProperties
+  , newMaterial
 ) where
 
-import qualified Data.Map as Map
-
-import           Control.Lens (makeLenses)
+import           Control.Lens (makeLenses, (&), (%~))
 import qualified Data.Vector as V
 import           Linear (V2(..))
+
+import           Codec.Soten.Types (Color3D)
 
 -- | Defines how the Nth texture of a specific type is combined with
 -- the result of all previous layers.
@@ -171,27 +171,35 @@ newUVTransform =
 
 -- | Data structure for a single material property.
 data MaterialProperty
-    = MaterialPropertyTexture
-    { -- | Specifies their exact usage semantic.
-      _materialPropertySemantic :: !TextureType
-      -- | Specifies the index of the texture.
-    , _materialPropertyIndex    :: !Int
-    -- TODO: Add texture data field
-    }
-    -- | Array of single-precision floats
-    | MaterialPropertyFloat !(V.Vector Float)
-    -- | The material property is an String.
-    | MaterialPropertyString String
-    -- | Array of integers
-    | MaterialPropertyInt !(V.Vector Int)
-    deriving Show
-makeLenses ''MaterialProperty
+    = MaterialName           !String
+    | MaterialShadingModel   !ShadingMode
+    | MaterialColorAmbient   !Color3D
+    | MaterialColorDiffuse   !Color3D
+    | MaterialColorSpecular  !Color3D
+    | MaterialColorEmissive  !Color3D
+    | MaterialColorShininess !Float
+    | MaterialColorOpacity   !Float
+    | MaterialRefracti       !Float
+    | MaterialTexture        !TextureType !String
+    | MaterialMappingModeU   !TextureType !TextureMapMode
+    | MaterialMappingModeV   !TextureType !TextureMapMode
+    deriving (Show, Eq)
 
 -- | Data structure for a material.
 data Material =
     Material
     { -- | List of all material properties loaded.
-      _materialProperties :: !(Map.Map String MaterialProperty)
+      _materialProperties :: !(V.Vector MaterialProperty)
     }
     deriving Show
 makeLenses ''Material
+
+-- | Adds a property to material.
+addProperty :: Material -> MaterialProperty -> Material
+addProperty mat property = mat & materialProperties  %~ V.cons property
+
+newMaterial :: Material
+newMaterial =
+    Material
+    { _materialProperties = V.empty
+    }

@@ -14,9 +14,12 @@ import           Codec.Soten.Scene
                  )
 import           Codec.Soten.Util (CheckType)
 
+-- | A common interface for all importer worker classes.
 class Show a => BaseImporter a where
-  canImport :: a -> FilePath -> CheckType -> IO Bool
-  readModel :: a -> FilePath -> IO (Either String Scene)
+    -- | Returns whether the class can handle the format of the given file.
+    canImport :: a -> FilePath -> CheckType -> IO Bool
+    -- | Imports the given file and returns the imported data.
+    readModel :: a -> FilePath -> IO (Either String Scene)
 
 searchFileHeaderForToken :: FilePath -> [String] -> IO Bool
 searchFileHeaderForToken filePath tokens =
