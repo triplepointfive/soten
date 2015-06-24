@@ -9,10 +9,14 @@ import           Data.Char (toLower)
 
 import qualified Data.ByteString.Char8 as B
 
+import           Codec.Soten.Scene
+                 ( Scene(..)
+                 )
 import           Codec.Soten.Util (CheckType)
 
 class Show a => BaseImporter a where
   canImport :: a -> FilePath -> CheckType -> IO Bool
+  readModel :: a -> FilePath -> IO (Either String Scene)
 
 searchFileHeaderForToken :: FilePath -> [String] -> IO Bool
 searchFileHeaderForToken filePath tokens =

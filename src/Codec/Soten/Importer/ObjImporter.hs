@@ -26,6 +26,7 @@ instance BaseImporter ObjImporter where
   canImport _ filePath CheckHeader    = searchFileHeaderForToken filePath tokens
     where
       tokens = ["mtllib", "usemtl", "v ", "vt ", "vn ", "o ", "g ", "s ", "f "]
+  readModel _ filePath = undefined
 
 internalReadFile :: FilePath -> IO ObjImporter
 internalReadFile filePath = do

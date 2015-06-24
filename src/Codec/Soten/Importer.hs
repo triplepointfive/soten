@@ -106,7 +106,8 @@ parseWithImporter :: FilePath
                   -> Importer
                   -> Importers
                   -> IO (Either String Scene)
-parseWithImporter = undefined
+parseWithImporter filePath _ (Importers imp) =
+    readModel imp filePath
 
 -- | Find an worker class which can handle the file by file extension.
 findImporterWithExtension :: FilePath
