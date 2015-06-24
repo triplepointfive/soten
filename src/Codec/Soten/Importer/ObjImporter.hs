@@ -93,17 +93,17 @@ createMaterial model scene material =
         , MaterialColorShininess (material ^. meterialShineness)
         , MaterialColorOpacity   (material ^. meterialAlpha    )
         , MaterialRefracti       (material ^. meterialIor      )
-        ] ++ textureProperties
+        ] ++ textureProperties texturesMapping
         )
     shadingModel = case material ^. meterialIlluminationModel of
         0 -> ShadingModeNoShading
         2 -> ShadingModePhong
         _ -> ShadingModeGouraud
     textureProperties =
-        intercalate [] $
-        map textureProp $
-        filter (\(name, _, _) -> not $ null name) $
-        map (\(f, texType, objTex) -> (material ^. f, texType, objTex)) texturesMapping
+        intercalate [] .
+        map textureProp .
+        filter (\(name, _, _) -> not $ null name) .
+        map (\(f, texType, objTex) -> (material ^. f, texType, objTex))
       where
         textureProp (name, texType, objTex)
             | fromMaybe False (Map.lookup objTex (material ^. meterialClamp)) =
