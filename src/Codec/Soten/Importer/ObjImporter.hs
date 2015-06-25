@@ -21,6 +21,7 @@ import           Codec.Soten.Scene
                  ( Scene(..)
                  , newScene
                  , sceneMaterials
+                 , sceneMeshes
                  , sceneRootNode
                  , Node(..)
                  , newNode
@@ -29,6 +30,7 @@ import           Codec.Soten.Scene
                  , nodeMeshes
                  )
 import           Codec.Soten.Scene.Material as SM
+import           Codec.Soten.Scene.Mesh as SM
 import           Codec.Soten.Types
                  ( Index
                  )
@@ -61,12 +63,14 @@ internalReadFile filePath = do
     objMinSize = 16
 
 createDataFromImport :: Model -> IO (Either String Scene)
-createDataFromImport model = undefined
---  where
---    scene = newScene & sceneRootNode .~ Just rootNode
+createDataFromImport model = return $ Right (createMaterials model scene)
+  where
+    (meshes, rootNode) = createNodes model
+    scene = newScene & sceneRootNode .~ Just rootNode
+        & sceneMeshes .~ meshes
 
 -- | Creates nodes from model\'s objects.
--- createNodes :: Model -> Node
+createNodes :: Model -> (V.Vector SM.Mesh, Node)
 createNodes model =
     foldl (createNode model) (V.empty, rootNode) (model ^. modelObjects)
   where
@@ -75,35 +79,67 @@ createNodes model =
 -- | Converts a single 'Object' to 'Node' and adds it to the root node.
 createNode :: Model
            -- | (Meshes, Root node).
-           -> (V.Vector Mesh, Node)
+           -> (V.Vector SM.Mesh, Node)
            -> Object
-           -> (V.Vector Mesh, Node)
+           -> (V.Vector SM.Mesh, Node)
 createNode model (meshes, root) obj =
     (meshes V.++ V.map snd objMeshes, root & nodeChildren %~ V.cons node)
   where
     node = newNode & nodeName .~ obj ^. objectName
         & nodeMeshes .~ V.map ((+ V.length meshes) . fst) objMeshes
 
-    objMeshes :: V.Vector (Index, Mesh)
+    objMeshes :: V.Vector (Index, SM.Mesh)
     objMeshes = V.indexed $ V.filter (not . blankMesh) $
-        V.map (createTopology model obj) (obj ^. objectMeshes)
+        V.map (createTopology model) (obj ^. objectMeshes)
 
-    blankMesh :: Mesh -> Bool
-    blankMesh mesh = V.null (mesh ^. meshFaces)
+    blankMesh :: SM.Mesh -> Bool
+    blankMesh mesh = V.null (mesh ^. SM.meshFaces)
 
 -- | Creates topology data.
-createTopology :: Model -> Object -> Index -> Mesh
-createTopology = undefined
+createTopology :: Model -> Index -> SM.Mesh
+createTopology model index = createVertexArray model objMesh mesh
+  where
+    objMesh = (model ^. modelMeshes) V.! index
+    mesh = foldl faceMapping SM.newMesh (objMesh ^. Obj.meshFaces)
 
+faceMapping :: SM.Mesh -> Obj.Face -> SM.Mesh
+faceMapping mesh face =
+    mesh & meshPrimitiveTypes %~ push (face ^. facePrimitiveType)
+  where
+    push :: Eq a => a -> V.Vector a -> V.Vector a
+    push v vec = if v `V.elem` vec then vec else V.snoc vec v
+
+-- | Creates a vertex array.
+createVertexArray :: Model -> Obj.Mesh -> SM.Mesh -> SM.Mesh
+createVertexArray model objMesh mesh =
+    foldl (vertexMapping model) mesh (objMesh ^. Obj.meshFaces)
+
+-- | Copy vertices, normals and textures into 'SM.Mesh' instance.
+vertexMapping :: Model -> SM.Mesh -> Obj.Face -> SM.Mesh
+vertexMapping model mesh face = mesh
+    & meshVertices %~ V.cons ((model ^. modelVertices) !! vertexIndex)
+    & meshNormals  %~ normal
+    & meshTextureCoords %~ texture
+  where
+    index = 0
+    vertexIndex = (face ^. faceVertices) !! index
+
+    normal = if null (model ^. modelNormals)
+        then id
+        else V.cons ((model ^. modelVertices) !! vertexIndex)
+
+    texture = if null (model ^. modelTextureCoord)
+        then id
+        else V.cons ((model ^. modelTextureCoord) !! vertexIndex)
 
 -- | Creates the materials.
 createMaterials :: Model -> Scene -> Scene
 createMaterials model scene =
-    foldl (createMaterial model) scene (model ^. modelMaterialMap)
+    foldl createMaterial scene (model ^. modelMaterialMap)
 
 -- | Converts a 'Obj.Material' to 'Scene.Material' and adds to the 'Scene'.
-createMaterial :: Model -> Scene -> Obj.Material -> Scene
-createMaterial model scene material =
+createMaterial :: Scene -> Obj.Material -> Scene
+createMaterial scene material =
     scene & sceneMaterials %~ V.cons (setProperties SM.newMaterial)
   where
     setProperties :: SM.Material -> SM.Material
@@ -165,12 +201,6 @@ createMaterial model scene material =
           , TextureTypeDisplacement
           , TextureDispType)
         ]
-
--- creaetVertexArray :: Model -> Object -> Mesh -> Mesh
--- creaetVertexArray model obj mesh
---     | empty (obj ^. objectMeshes) = mesh
---     | otherwise = mesh
---   where
 
 removeSlashes :: String -> String
 removeSlashes str = iter str ""
