@@ -102,7 +102,7 @@ data Object =
     { -- | Object name
       _objectName   :: !String
       -- | Assigned meshes
-    , _objectMeshes :: ![Index]
+    , _objectMeshes :: !(V.Vector Index)
     } deriving (Show)
 makeLenses ''Object
 
@@ -143,7 +143,11 @@ data Model =
 makeLenses ''Model
 
 newObject :: Object
-newObject = Object "" []
+newObject =
+    Object
+    { _objectName   = ""
+    , _objectMeshes = V.empty
+    }
 
 newFace :: [Index] -> [Index] -> [Index] -> PrimitiveType -> Face
 newFace vertices textures normals primType =
@@ -156,7 +160,7 @@ newFace vertices textures normals primType =
     }
 
 newMesh :: Mesh
-newMesh = 
+newMesh =
     Mesh
     { _meshFaces           = V.empty
     , _meshMaterial        = Nothing

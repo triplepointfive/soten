@@ -133,7 +133,7 @@ getMaterialDesc matName = setMaterial . setUninitializedObject
         currentObj = model ^. onObject
 
         objMesh :: Mesh
-        objMesh = (model ^. modelMeshes) V.! head (currentObj ^. objectMeshes)
+        objMesh = (model ^. modelMeshes) V.! V.head (currentObj ^. objectMeshes)
 
         currentObjPresent, moreThanOneMesh, meshHasFaces :: Bool
         currentObjPresent = isJust (model ^. modelCurrentObject)
@@ -200,7 +200,7 @@ createMesh :: Model -> Model
 createMesh model =
     model & modelCurrentMesh .~ Just meshID
           & modelMeshes      %~ flip V.snoc newMesh
-          & onObject         %~ objectMeshes %~ (++[meshID])
+          & onObject         %~ objectMeshes %~ \ v -> V.snoc v meshID
   where
     meshID = length (model ^. modelMeshes)
 

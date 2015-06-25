@@ -25,12 +25,18 @@ import           Codec.Soten.Scene
                  , Node(..)
                  , newNode
                  , nodeName
+                 , nodeChildren
+                 , nodeMeshes
                  )
 import           Codec.Soten.Scene.Material as SM
-import           Codec.Soten.Util ( CheckType(..)
+import           Codec.Soten.Types
+                 ( Index
+                 )
+import           Codec.Soten.Util
+                 ( CheckType(..)
+                 , DeadlyImporterError(..)
                  , hasExtention
                  , throw
-                 , DeadlyImporterError(..)
                  )
 
 data ObjImporter =
@@ -60,17 +66,35 @@ createDataFromImport model = undefined
 --    scene = newScene & sceneRootNode .~ Just rootNode
 
 -- | Creates nodes from model\'s objects.
-createNodes :: Model -> Node
-createNodes model = foldl (createNode model) rootNode (model ^. modelObjects)
+-- createNodes :: Model -> Node
+createNodes model =
+    foldl (createNode model) (V.empty, rootNode) (model ^. modelObjects)
   where
     rootNode = newNode & nodeName .~ model ^. modelName
 
 -- | Converts a single 'Object' to 'Node' and adds it to the root node.
 createNode :: Model
-           -> Node -- | Root node.
+           -- | (Meshes, Root node).
+           -> (V.Vector Mesh, Node)
            -> Object
-           -> Node
-createNode model root obj = undefined
+           -> (V.Vector Mesh, Node)
+createNode model (meshes, root) obj =
+    (meshes V.++ V.map snd objMeshes, root & nodeChildren %~ V.cons node)
+  where
+    node = newNode & nodeName .~ obj ^. objectName
+        & nodeMeshes .~ V.map ((+ V.length meshes) . fst) objMeshes
+
+    objMeshes :: V.Vector (Index, Mesh)
+    objMeshes = V.indexed $ V.filter (not . blankMesh) $
+        V.map (createTopology model obj) (obj ^. objectMeshes)
+
+    blankMesh :: Mesh -> Bool
+    blankMesh mesh = V.null (mesh ^. meshFaces)
+
+-- | Creates topology data.
+createTopology :: Model -> Object -> Index -> Mesh
+createTopology = undefined
+
 
 -- | Creates the materials.
 createMaterials :: Model -> Scene -> Scene
@@ -141,6 +165,12 @@ createMaterial model scene material =
           , TextureTypeDisplacement
           , TextureDispType)
         ]
+
+-- creaetVertexArray :: Model -> Object -> Mesh -> Mesh
+-- creaetVertexArray model obj mesh
+--     | empty (obj ^. objectMeshes) = mesh
+--     | otherwise = mesh
+--   where
 
 removeSlashes :: String -> String
 removeSlashes str = iter str ""
