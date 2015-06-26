@@ -78,8 +78,7 @@ createNodes model =
 
 -- | Converts a single 'Object' to 'Node' and adds it to the root node.
 createNode :: Model
-           -- | (Meshes, Root node).
-           -> (V.Vector SM.Mesh, Node)
+           -> (V.Vector SM.Mesh, Node) -- ^ (Meshes, Root node).
            -> Object
            -> (V.Vector SM.Mesh, Node)
 createNode model (meshes, root) obj =
@@ -116,21 +115,23 @@ createVertexArray model objMesh mesh =
 
 -- | Copy vertices, normals and textures into 'SM.Mesh' instance.
 vertexMapping :: Model -> SM.Mesh -> Obj.Face -> SM.Mesh
-vertexMapping model mesh face = mesh
-    & meshVertices %~ V.cons ((model ^. modelVertices) !! vertexIndex)
-    & meshNormals  %~ normal
-    & meshTextureCoords %~ texture
+vertexMapping model mesh face = foldl (addFace) mesh (face ^. faceVertices)
   where
-    index = 0
-    vertexIndex = (face ^. faceVertices) !! index
+    addFace mesh index = mesh
+        & meshVertices %~ V.cons ((model ^. modelVertices) !! vertexIndex)
+        & meshNormals  %~ normal
+        & meshTextureCoords %~ texture
+      where
+        -- TODO: Check for lines and points
+        vertexIndex = (face ^. faceVertices) !! index
 
-    normal = if null (model ^. modelNormals)
-        then id
-        else V.cons ((model ^. modelVertices) !! vertexIndex)
+        normal = if null (model ^. modelNormals)
+            then id
+            else V.cons ((model ^. modelVertices) !! vertexIndex)
 
-    texture = if null (model ^. modelTextureCoord)
-        then id
-        else V.cons ((model ^. modelTextureCoord) !! vertexIndex)
+        texture = if null (model ^. modelTextureCoord)
+            then id
+            else V.cons ((model ^. modelTextureCoord) !! vertexIndex)
 
 -- | Creates the materials.
 createMaterials :: Model -> Scene -> Scene
