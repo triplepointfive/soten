@@ -15,8 +15,11 @@ import           Safe (readMay)
 import           Codec.Soten.Scene.Mesh (PrimitiveType(..))
 import           Codec.Soten.Data.ObjData
 import           Codec.Soten.Parser.ObjMtlParser (load)
-import           Codec.Soten.Util (tryReadFile,
-                 throw, DeadlyImporterError(..)
+import           Codec.Soten.Util
+                 ( DeadlyImporterError(..)
+                 , throw
+                 , tryReadFile
+                 , parseVector3
                  )
 
 getModel :: String -> String -> Model
@@ -174,14 +177,6 @@ getObjectName objName model = case objIndex of
     Nothing -> createObject objName model
   where
     objIndex = V.findIndex ((==objName) . _objectName) (model ^. modelObjects)
-
-parseVector3 :: String -> V3 Float
-parseVector3 line = V3 x y z
-  where
-    [x, y, z] = map (fromMaybe parseError . readMay) $ take 3
-        $ filter (not . null) $ split " " line
-    parseError = throw $ DeadlyImporterError $
-        "Failed to getVertex for line: '" ++ line ++ "'"
 
 createObject :: String -> Model -> Model
 createObject objName = setMeshMaterial . createMesh . addObject

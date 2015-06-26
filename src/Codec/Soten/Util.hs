@@ -8,12 +8,18 @@ module Codec.Soten.Util (
   -- Util
   , nothing
   , tryReadFile
+  , parseVector3
 ) where
 
 import           Control.Exception (IOException, try, Exception, throw)
 import           Data.Char (toLower)
+import           Data.Maybe (fromMaybe)
 import           Data.Typeable (Typeable)
 import           System.FilePath (takeExtension)
+
+import           Data.String.Utils (split)
+import           Linear (V3(..))
+import           Safe (readMay)
 
 data CheckType
     = CheckExtension
@@ -33,3 +39,12 @@ nothing _ a        = a
 
 tryReadFile :: FilePath -> IO (Either IOException String)
 tryReadFile filePath = try (readFile filePath)
+
+parseVector3 :: String -> V3 Float
+parseVector3 line = V3 x y z
+  where
+    -- TODO: Should be safer
+    [x, y, z] = map (fromMaybe parseError . readMay) $ take 3
+        $ filter (not . null) $ split " " line
+    parseError = throw $ DeadlyImporterError $
+        "Failed to getVertex for line: '" ++ line ++ "'"
