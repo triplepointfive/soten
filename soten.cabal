@@ -18,6 +18,7 @@ library
                      , Codec.Soten.FileImporter
                      , Codec.Soten.Importer
                      , Codec.Soten.Importer.ObjImporter
+                     , Codec.Soten.Importer.StlImporter
                      , Codec.Soten.Internal.ImporterRegistry
                      , Codec.Soten.Scene.Anim
                      , Codec.Soten.Scene.Camera

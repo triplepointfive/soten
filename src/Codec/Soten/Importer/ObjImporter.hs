@@ -115,7 +115,7 @@ createVertexArray model objMesh mesh =
 
 -- | Copy vertices, normals and textures into 'SM.Mesh' instance.
 vertexMapping :: Model -> SM.Mesh -> Obj.Face -> SM.Mesh
-vertexMapping model mesh face = foldl (addFace) mesh (face ^. faceVertices)
+vertexMapping model mesh face = foldl addFace mesh (face ^. faceVertices)
   where
     addFace mesh index = mesh
         & meshVertices %~ V.cons ((model ^. modelVertices) !! vertexIndex)

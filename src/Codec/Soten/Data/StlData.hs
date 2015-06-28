@@ -14,11 +14,17 @@ module Codec.Soten.Data.StlData (
 ) where
 
 import           GHC.Generics
-
-import           Control.Lens (makeLenses)
+import           Data.Word
+                 ( Word16
+                 )
+import           Control.Lens
+                 ( makeLenses
+                 )
 import           Data.Serialize
 import qualified Data.Vector as V
-import           Linear (V3(..))
+import           Linear
+                 ( V3(..)
+                 )
 
 -- | The facet data, represents a single triangle.
 data Facet =
@@ -28,7 +34,7 @@ data Facet =
       -- | Three vertices (corners).
     , _facetVertices  :: !(V.Vector (V3 Float))
       -- | Attribute byte count.
-    , _facetAttribute :: !Int
+    , _facetAttribute :: !Word16
     } deriving (Show, Generic)
 makeLenses ''Facet
 
@@ -51,8 +57,10 @@ instance Serialize Facet where
         v3y <- getFloat32le
         v3z <- getFloat32le
 
+        attr <- getWord16le
+
         return $ Facet (V3 n1 n2 n3)
-            (V.fromList [V3 v1x v1y v1z, V3 v2x v2y v2z, V3 v3x v3y v3z]) 0
+            (V.fromList [V3 v1x v1y v1z, V3 v2x v2y v2z, V3 v3x v3y v3z]) attr
 
 -- | Initializes new model instance.
 newFacet :: Facet

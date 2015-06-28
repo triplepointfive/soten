@@ -4,7 +4,7 @@ module Codec.Soten.Parser.StlParser (
   , parseBinary
 ) where
 
-import           Control.Lens ((^.), (&), (%~), (.~))
+import           Control.Lens ((&), (%~), (.~))
 import qualified Data.ByteString as BS
 import           Data.Serialize
 import qualified Data.Vector as V
@@ -84,7 +84,7 @@ setNormal normal (model, parser) =
 -- | Adds a normal to the current parser.
 addNormal :: V3 Float -> ParserState -> ParserState
 addNormal v StateNone = StateFacet v V.empty
-addNormal v parser = throw $ DeadlyImporterError $
+addNormal _ parser = throw $ DeadlyImporterError $
     "addNormal is called for initialized parser: '" ++ show parser ++ "'"
 
 -- | Adds a vertext to the current facet or initializates new.
@@ -100,7 +100,7 @@ addVertex v StateNone = throw $ DeadlyImporterError $
     "addVertex adds a vertex without normals: '" ++ show v ++ "'"
 addVertex v (StateFacet normal vertices)
     | V.length vertices == 2 = Left $
-        newFacet & facetNormal .~ normal & facetVertices .~ (V.snoc vertices v)
+        newFacet & facetNormal .~ normal & facetVertices .~ V.snoc vertices v
     | otherwise = Right $ StateFacet normal (V.snoc vertices v)
 
 -- | Removes spaces in the beginning of string.
