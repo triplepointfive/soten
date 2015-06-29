@@ -11,6 +11,12 @@ import           Data.Maybe
                  ( isJust
                  , fromJust
                  )
+import qualified Data.Vector as V
+
+import           Control.Lens ((&), (.~))
+import           Linear
+                 ( V3(..)
+                 )
 
 import           Codec.Soten.BaseImporter
                  ( BaseImporter(..)
@@ -23,8 +29,19 @@ import           Codec.Soten.Parser.StlParser
                  ( parseASCII
                  , parseBinary
                  )
+import           Codec.Soten.Scene.Material
+                 ( MaterialProperty(..)
+                 , addProperty
+                 , newMaterial
+                 )
+import           Codec.Soten.Scene.Mesh
+                 ( newMesh
+                 )
 import           Codec.Soten.Scene
                  ( Scene(..)
+                 , sceneMeshes
+                 , sceneMaterials
+                 , newScene
                  )
 import           Codec.Soten.Util
                  ( CheckType(..)
@@ -50,6 +67,18 @@ instance BaseImporter StlImporter where
 -- as 'String's.
 internalReadFile :: FilePath -> IO (Either String Scene)
 internalReadFile filePath = undefined
+  where
+    scene = newScene & sceneMaterials .~ V.singleton mat
+        & sceneMeshes .~ V.singleton mesh
+    mesh = newMesh
+    -- TODO: Move DefaultMaterial to constants
+    mat = foldl addProperty newMaterial
+        [ MaterialName "DefaultMaterial"
+        , MaterialColorDiffuse clrDiffuseColor
+        , MaterialColorSpecular clrDiffuseColor
+        , MaterialColorAmbient (V3 0.5 0.5 0.5)
+        ]
+    clrDiffuseColor = V3 0.6 0.6 0.6
 
 -- | Checks which wheter file has binary or ascii representation.
 getModel :: FilePath -> IO Model
