@@ -9,6 +9,7 @@ import qualified Data.Vector as V
 
 import           Codec.Soten.BaseImporter (BaseImporter(..))
 import           Codec.Soten.Importer.ObjImporter (ObjImporter(..))
+import           Codec.Soten.Importer.StlImporter (StlImporter(..))
 
 -- | Intermediate structure to include all instances of BaseImporter class.
 data Importers = forall a. BaseImporter a => Importers a
@@ -21,4 +22,5 @@ getImporterInstanceList :: V.Vector Importers
 getImporterInstanceList =
     V.fromList
     [ Importers ObjImporter
+    , Importers StlImporter
     ]
