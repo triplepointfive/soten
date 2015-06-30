@@ -13,7 +13,7 @@ import           Data.Maybe
                  )
 import qualified Data.Vector as V
 
-import           Control.Lens ((&), (.~))
+import           Control.Lens ((&), (^.), (.~))
 import           Linear
                  ( V3(..)
                  )
@@ -24,6 +24,10 @@ import           Codec.Soten.BaseImporter
                  )
 import           Codec.Soten.Data.StlData
                  ( Model
+                 , modelName
+                 , modelFacets
+                 , facetNormal
+                 , facetVertices
                  )
 import           Codec.Soten.Parser.StlParser
                  ( parseASCII
@@ -35,13 +39,23 @@ import           Codec.Soten.Scene.Material
                  , newMaterial
                  )
 import           Codec.Soten.Scene.Mesh
-                 ( newMesh
+                 ( Mesh
+                 , meshFaces
+                 , meshMaterialIndex
+                 , meshName
+                 , meshNormals
+                 , meshVertices
+                 , newMesh
+                 , Face(..)
                  )
 import           Codec.Soten.Scene
                  ( Scene(..)
                  , sceneMeshes
                  , sceneMaterials
+                 , sceneRootNode
                  , newScene
+                 , nodeMeshes
+                 , newNode
                  )
 import           Codec.Soten.Util
                  ( CheckType(..)
@@ -66,11 +80,16 @@ instance BaseImporter StlImporter where
 -- | Reads file content and parsers it into the 'Scene'. Returns error messages
 -- as 'String's.
 internalReadFile :: FilePath -> IO (Either String Scene)
-internalReadFile filePath = undefined
+internalReadFile filePath = do
+    -- TODO: Catch exceptions here.
+    model <- getModel filePath
+    let scene = newScene & sceneMaterials .~ V.singleton mat
+            & sceneMeshes .~ V.singleton mesh
+            & sceneRootNode .~ Just node
+        mesh = getMesh model
+        node = newNode & nodeMeshes .~ V.singleton 0
+        in return $ Right scene
   where
-    scene = newScene & sceneMaterials .~ V.singleton mat
-        & sceneMeshes .~ V.singleton mesh
-    mesh = newMesh
     -- TODO: Move DefaultMaterial to constants
     mat = foldl addProperty newMaterial
         [ MaterialName "DefaultMaterial"
@@ -79,6 +98,24 @@ internalReadFile filePath = undefined
         , MaterialColorAmbient (V3 0.5 0.5 0.5)
         ]
     clrDiffuseColor = V3 0.6 0.6 0.6
+
+-- | Creates mesh according to the 'Facet' data.
+getMesh :: Model -> Mesh
+getMesh model = newMesh
+    & meshName .~ (model ^. modelName)
+    & meshNormals .~ normals
+    & meshVertices .~ vertices
+    & meshFaces .~ faces
+    & meshMaterialIndex .~ Just 0
+  where
+    vertices = foldl (\ vp facet -> vp V.++ (facet ^. facetVertices))
+        V.empty (model ^. modelFacets)
+
+    normals = foldl (\ vn facet -> V.snoc vn (facet ^. facetNormal))
+        V.empty (model ^. modelFacets)
+
+    faces = V.imap (\ i _ -> Face (V.fromList [3 * i, 3 * i + 1, 3 * i + 2 ]))
+        vertices
 
 -- | Checks which wheter file has binary or ascii representation.
 getModel :: FilePath -> IO Model
@@ -111,8 +148,8 @@ isBinary fileName = do
         then return Nothing
         else
             let [w1, w2, w3, w4] = BS.unpack (BS.take 4 (BS.drop 80 content))
-                facetsCount = w1 + 256 * (w2 + 256 * (w3 + 256 * w4))
+                facetsCount = w1 + 255 * (w2 + 255 * (w3 + 255 * w4))
             in
-            if BS.length content == fromIntegral (84 + facetsCount * 50)
+            if BS.length content ==  84 + (fromIntegral facetsCount) * 50
                 then return (Just content)
                 else return Nothing
