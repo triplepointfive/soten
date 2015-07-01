@@ -8,6 +8,7 @@ module Codec.Soten.Importer (
   , importerStringProperty
   , importerMatrixProperty
   , readModelFile
+  , resetImporterScene
 )where
 
 import qualified Data.Map as Map

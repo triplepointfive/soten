@@ -1,3 +1,4 @@
+-- | Implement shared utility functions for postprocessing steps.
 module Codec.Soten.PostProcess (
     PostProcessStep(..)
   , convertToLeftHanded

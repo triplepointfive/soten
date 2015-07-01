@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+-- | Defines texture helper structures for the library.
 module Codec.Soten.Scene.Texture (
     Texel(..)
   , texelA
@@ -23,9 +24,13 @@ import qualified Data.Vector as V
 -- | Helper structure to represent a texel in a ARGB8888 format.
 data Texel =
     Texel
-    { _texelA :: !Int8
+    { -- | Alpha component.
+      _texelA :: !Int8
+      -- | Red component.
     , _texelR :: !Int8
+      -- | Green component.
     , _texelG :: !Int8
+      -- | Blue component.
     , _texelB :: !Int8
     } deriving (Show, Eq)
 makeLenses ''Texel
@@ -45,6 +50,7 @@ data Texture =
     } deriving Show
 makeLenses ''Texture
 
+-- | Initializes new 'Texture'.
 newTexture :: Texture
 newTexture =
     Texture

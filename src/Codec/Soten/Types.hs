@@ -1,7 +1,7 @@
 module Codec.Soten.Types (
-    Color3D(..)
-  , Color4D(..)
-  , Index(..)
+    Color3D
+  , Color4D
+  , Index
 ) where
 
 import Linear (V3(..), V4(..))
