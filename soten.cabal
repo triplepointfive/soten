@@ -56,14 +56,18 @@ Test-Suite test-soten
   main-is:            Spec.hs
   build-depends:      base
                     , hspec
-                    , bytestring
-                    , lens
-                    , linear
-                    , MissingH
-                    , safe
-                    , filepath
-                    , cereal
-                    , vector
+                     , bytestring
+                     , cereal
+                     , containers
+                     , directory
+                     , filepath
+                     , lens
+                     , linear
+                     , MissingH
+                     , mtl
+                     , safe
+                     , unix
+                     , vector
   buildable:          True
   cpp-options:        -DTEST_MODE=true
   hs-source-dirs:     src test
