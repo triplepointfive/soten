@@ -9,8 +9,12 @@ import Codec.Soten.Importer
 import Codec.Soten.Importer.StlImporter
 import Codec.Soten.Util
 
+import Codec.Soten.Parser.XglParserTest
+
 main :: IO ()
 main = hspec $ do
+  xglParserTest
+
   describe "Importer" $ do
     context "Errors" $ do
       it "Unknown format" $ do

@@ -15,10 +15,11 @@ library
                      , Codec.Soten.BaseImporter
                      , Codec.Soten.Data.ObjData
                      , Codec.Soten.Data.StlData
-                     , Codec.Soten.FileImporter
+                     , Codec.Soten.Data.XglData
                      , Codec.Soten.Importer
                      , Codec.Soten.Importer.ObjImporter
                      , Codec.Soten.Importer.StlImporter
+                     , Codec.Soten.Importer.XglImporter
                      , Codec.Soten.Internal.ImporterRegistry
                      , Codec.Soten.Scene.Anim
                      , Codec.Soten.Scene.Camera
@@ -30,6 +31,7 @@ library
                      , Codec.Soten.Parser.ObjFileParser
                      , Codec.Soten.Parser.ObjMtlParser
                      , Codec.Soten.Parser.StlParser
+                     , Codec.Soten.Parser.XglParser
                      , Codec.Soten.PostProcess
                      , Codec.Soten.Scene
                      , Codec.Soten.Types
@@ -40,6 +42,8 @@ library
                      , containers
                      , directory
                      , filepath
+                     , xml-conduit
+                     , text
                      , lens
                      , linear
                      , MissingH
@@ -61,6 +65,8 @@ Test-Suite test-soten
                      , containers
                      , directory
                      , filepath
+                     , xml-conduit
+                     , text
                      , lens
                      , linear
                      , MissingH
