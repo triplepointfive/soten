@@ -150,6 +150,6 @@ isBinary fileName = do
             let [w1, w2, w3, w4] = BS.unpack (BS.take 4 (BS.drop 80 content))
                 facetsCount = w1 + 255 * (w2 + 255 * (w3 + 255 * w4))
             in
-            if BS.length content ==  84 + (fromIntegral facetsCount) * 50
+            if BS.length content ==  84 + fromIntegral facetsCount * 50
                 then return (Just content)
                 else return Nothing
