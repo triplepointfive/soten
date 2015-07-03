@@ -40,11 +40,13 @@ nothing _ a        = a
 tryReadFile :: FilePath -> IO (Either IOException String)
 tryReadFile filePath = try (readFile filePath)
 
-parseVector3 :: String -> V3 Float
-parseVector3 line = V3 x y z
+parseVector3 :: String -> String -> V3 Float
+parseVector3 delim line = case tokens of
+    [x, y, z] -> V3 x y z
+    _ -> parseError
   where
-    -- TODO: Should be safer
-    [x, y, z] = map (fromMaybe parseError . readMay) $ take 3
-        $ filter (not . null) $ split " " line
+    tokens = map (fromMaybe parseError . readMay) $ take 3
+        $ filter (not . null) $ split delim line
     parseError = throw $ DeadlyImporterError $
-        "Failed to getVertex for line: '" ++ line ++ "'"
+        "Failed to getVertex for line: '" ++ line ++ "' and delimeter: '"
+            ++ delim ++ "'"
