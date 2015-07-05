@@ -79,7 +79,7 @@ setName name (model, _) = (model & modelName .~ name, StateNone)
 -- | Parsers a normal for facet.
 setNormal :: String -> (Model, ParserState) -> (Model, ParserState)
 setNormal normal (model, parser) =
-    (model, addNormal (parseVector3 normal) parser)
+    (model, addNormal (parseVector3 " " normal) parser)
 
 -- | Adds a normal to the current parser.
 addNormal :: V3 Float -> ParserState -> ParserState
@@ -92,7 +92,7 @@ setVertex :: String -> (Model, ParserState) -> (Model, ParserState)
 setVertex vertex (model, parser) = either
     (\ facet -> (model & modelFacets %~ flip V.snoc facet, StateNone))
     (\ updParser -> (model, updParser))
-    (addVertex (parseVector3 vertex) parser)
+    (addVertex (parseVector3 " " vertex) parser)
 
 -- | Adds a vertex to parser state. Returns new facet for each 3 vertices.
 addVertex :: V3 Float -> ParserState -> Either Facet ParserState

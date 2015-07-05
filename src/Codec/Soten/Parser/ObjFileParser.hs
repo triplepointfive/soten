@@ -47,7 +47,7 @@ parseLine ('o':' ':xs)     = getObjectName xs
 parseLine _                = id
 
 getVertex :: String -> Model -> Model
-getVertex line model = model & modelVertices %~ (++[parseVector3 line])
+getVertex line model = model & modelVertices %~ (++[parseVector3 " " line])
 
 getTextureCoord :: String -> Model -> Model
 getTextureCoord line model = model & modelTextureCoord %~ (++[newVector coords])
@@ -62,7 +62,7 @@ getTextureCoord line model = model & modelTextureCoord %~ (++[newVector coords])
         "Failed to getVertex for line: '" ++ line ++ "'"
 
 getVertexNormal :: String -> Model -> Model
-getVertexNormal line model = model & modelNormals %~ (++[parseVector3 line])
+getVertexNormal line model = model & modelNormals %~ (++[parseVector3 " " line])
 
 type FaceIndices = ([Int], [Int], [Int])
 
