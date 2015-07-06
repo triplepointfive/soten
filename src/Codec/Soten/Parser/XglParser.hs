@@ -1,5 +1,5 @@
 {-# LANGUAGE Arrows #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE Rank2Types #-}
 -- | The parser of XGL models.
 module Codec.Soten.Parser.XglParser (
     getModel
@@ -12,11 +12,15 @@ import           Text.XML.HXT.Core
 
 import           Codec.Soten.Data.XglData
                  ( Model(..)
+                 , Author(..)
                  , LightingTag(..)
                  )
 import           Codec.Soten.Util
                  ( parseVector3
                  )
+
+-- | Shortcut for parser declarations.
+type Field f = forall cat.ArrowXml cat => cat XmlTree f
 
 text :: ArrowXml cat => cat XmlTree String
 text = getChildren >>> getText
@@ -24,18 +28,26 @@ text = getChildren >>> getText
 atTag :: ArrowXml cat => String -> cat XmlTree XmlTree
 atTag tag = deep (isElem >>> hasName tag)
 
-getBackgroud :: ArrowXml cat => cat XmlTree (V3 Float)
+-- | Parses backgound tag.
+getBackgroud :: Field (V3 Float)
 getBackgroud = atTag "BACKGROUND" >>> atTag "BACKCOLOR" >>>
     proc x -> do
         color <- text -< x
         returnA -< (parseVector3 "," color)
 
+getAuthor :: Field Author
+getAuthor = atTag "AUTHOR" >>>
+    proc x -> do
+        name <- text <<< atTag "NAME" -< x
+        version <- text <<< atTag "VERSION" -< x
+        returnA -< Author name version
+
 -- | Parses light tags.
-getLighting :: ArrowXml cat => cat XmlTree LightingTag
+getLighting :: Field LightingTag
 getLighting = atTag "LIGHTING" >>> catA [getAmbient, getDirectional, getSphere]
   where
     -- | Parses ambient light.
-    getAmbient :: ArrowXml cat => cat XmlTree LightingTag
+    getAmbient :: Field LightingTag
     getAmbient = atTag "AMBIENT" >>>
         proc x -> do
             color <- text -< x
@@ -43,7 +55,7 @@ getLighting = atTag "LIGHTING" >>> catA [getAmbient, getDirectional, getSphere]
                 (parseVector3 "," color)
 
     -- | Parses directional light source.
-    getDirectional :: ArrowXml cat => cat XmlTree LightingTag
+    getDirectional :: Field LightingTag
     getDirectional = atTag "DIRECTIONALLIGHT" >>>
         proc x -> do
             direction <- text <<< atTag "DIRECTION" -< x
@@ -55,7 +67,7 @@ getLighting = atTag "LIGHTING" >>> catA [getAmbient, getDirectional, getSphere]
                 (parseVector3 "," specular)
 
     -- | Parses spherical light source.
-    getSphere :: ArrowXml cat => cat XmlTree LightingTag
+    getSphere :: Field LightingTag
     getSphere = atTag "SPHEREMAP" >>>
         proc x -> do
             center <- text <<< atTag "CENTER" -< x

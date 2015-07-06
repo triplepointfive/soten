@@ -3,6 +3,7 @@
 module Codec.Soten.Data.XglData (
     Model(..)
   , modelBackgroundColor
+  , Author(..)
   , LightingTag(..)
 ) where
 
@@ -40,6 +41,15 @@ data LightingTag
     , _lightingTagSphereMapRadius :: !Float
     }
     deriving Show
+
+-- | Determines the original author of the file.
+data Author =
+    Author
+    { -- | Represents the author name.
+      _authorName    :: !String
+      -- | The version of the model file. Contains "." as a delimiter.
+    , _authorVersion :: !String
+    } deriving Show
 
 -- | Data structure to store all stl-specific model datum.
 data Model =
