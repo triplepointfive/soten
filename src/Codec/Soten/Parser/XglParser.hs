@@ -5,6 +5,11 @@ module Codec.Soten.Parser.XglParser (
     getModel
   , getBackgroud
 ) where
+
+import           Data.Maybe
+                 ( listToMaybe
+                 )
+
 import           Linear
                  ( V3(..)
                  )
@@ -28,11 +33,14 @@ text = getChildren >>> getText
 atTag :: ArrowXml cat => String -> cat XmlTree XmlTree
 atTag tag = deep (isElem >>> hasName tag)
 
+getMaybe :: Field c -> Field (Maybe c)
+getMaybe arrow = (arrow >>> arr Just) `orElse` (constA Nothing)
+
 -- | Parses backgound tag.
 getBackgroud :: Field (V3 Float)
 getBackgroud = atTag "BACKGROUND" >>> atTag "BACKCOLOR" >>>
     proc x -> do
-        color <- text -< x
+        color    <- text -< x
         returnA -< (parseVector3 "," color)
 
 -- | Parses model author.
@@ -40,7 +48,7 @@ getAuthor :: Field Author
 getAuthor = atTag "AUTHOR" >>>
     proc x -> do
         name <- getObjectName -< x
-        version <- text <<< atTag "VERSION" -< x
+        version  <- text <<< atTag "VERSION" -< x
         returnA -< Author name version
 
 -- | Parses name of an object.
@@ -55,7 +63,7 @@ getLighting = atTag "LIGHTING" >>> catA [getAmbient, getDirectional, getSphere]
     getAmbient :: Field LightingTag
     getAmbient = atTag "AMBIENT" >>>
         proc x -> do
-            color <- text -< x
+            color    <- text -< x
             returnA -< LightingTagAmbient
                 (parseVector3 "," color)
 
@@ -64,9 +72,9 @@ getLighting = atTag "LIGHTING" >>> catA [getAmbient, getDirectional, getSphere]
     getDirectional = atTag "DIRECTIONALLIGHT" >>>
         proc x -> do
             direction <- text <<< atTag "DIRECTION" -< x
-            diffuse <- text <<< atTag "DIFFUSE" -< x
-            specular <- text <<< atTag "SPECULAR" -< x
-            returnA -< LightingTagDirectional
+            diffuse   <- text <<< atTag "DIFFUSE" -< x
+            specular  <- text <<< atTag "SPECULAR" -< x
+            returnA  -< LightingTagDirectional
                 (parseVector3 "," direction)
                 (parseVector3 "," diffuse)
                 (parseVector3 "," specular)
@@ -75,12 +83,23 @@ getLighting = atTag "LIGHTING" >>> catA [getAmbient, getDirectional, getSphere]
     getSphere :: Field LightingTag
     getSphere = atTag "SPHEREMAP" >>>
         proc x -> do
-            center <- text <<< atTag "CENTER" -< x
-            radius <- text <<< atTag "RADIUS" -< x
+            center   <- text <<< atTag "CENTER" -< x
+            radius   <- text <<< atTag "RADIUS" -< x
             returnA -< LightingTagSphereMap
                 (parseVector3 "," center)
                 (read radius)
 
 -- | Parses model file content.
-getModel :: String -> Model
-getModel fileContent = undefined
+getModel :: String -> Field Model
+getModel fileContent = atTag "WORLD" >>>
+    proc x -> do
+        name       <- getMaybe getObjectName -< x
+        lights     <- listA getLighting      -< x
+        author     <- getMaybe getAuthor     -< x
+        background <- getBackgroud           -< x
+        returnA   -< Model
+            { modelBackgroundColor = background
+            , modelLightingTags    = lights
+            , modelName            = name
+            , modelAuthor          = author
+            }
