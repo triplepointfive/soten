@@ -59,5 +59,9 @@ data Model =
       _modelBackgroundColor :: !(V3 Float)
       -- | Describes the lighting in an environment.
     , _modelLightingTags    :: ![LightingTag]
+      -- | Displayable name for an object or world.
+    , _modelName            :: !(Maybe String)
+      -- | Original author
+    , _modelAuthor          :: !(Maybe Author)
     } deriving Show
 makeLenses ''Model

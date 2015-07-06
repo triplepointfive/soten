@@ -35,12 +35,17 @@ getBackgroud = atTag "BACKGROUND" >>> atTag "BACKCOLOR" >>>
         color <- text -< x
         returnA -< (parseVector3 "," color)
 
+-- | Parses model author.
 getAuthor :: Field Author
 getAuthor = atTag "AUTHOR" >>>
     proc x -> do
-        name <- text <<< atTag "NAME" -< x
+        name <- getObjectName -< x
         version <- text <<< atTag "VERSION" -< x
         returnA -< Author name version
+
+-- | Parses name of an object.
+getObjectName :: Field String
+getObjectName = atTag "NAME" >>> text
 
 -- | Parses light tags.
 getLighting :: Field LightingTag
