@@ -17,6 +17,7 @@ import           Text.XML.HXT.Core
 
 import           Codec.Soten.Data.XglData
                  ( Model(..)
+                 , Mesh(..)
                  , Author(..)
                  , LightingTag(..)
                  )
@@ -27,27 +28,37 @@ import           Codec.Soten.Util
 -- | Shortcut for parser declarations.
 type Field f = forall cat.ArrowXml cat => cat XmlTree f
 
+-- | Parses value as 'String'.
 text :: ArrowXml cat => cat XmlTree String
 text = getChildren >>> getText
 
+-- | Helper for tags.
 atTag :: ArrowXml cat => String -> cat XmlTree XmlTree
 atTag tag = deep (isElem >>> hasName tag)
 
+-- | Helper for attributes.
+atAttr :: ArrowXml cat => String -> cat XmlTree XmlTree
+atAttr tag = deep (isElem >>> hasAttr tag)
+
+-- | Maybe parses a value, maybe not.
 getMaybe :: Field c -> Field (Maybe c)
 getMaybe arrow = (arrow >>> arr Just) `orElse` (constA Nothing)
 
+-- | Parses a vertex.
+getVector3 :: Field (V3 Float)
+getVector3 = proc x -> do
+    vertex   <- text -< x
+    returnA -< parseVector3 "," vertex
+
 -- | Parses backgound tag.
 getBackgroud :: Field (V3 Float)
-getBackgroud = atTag "BACKGROUND" >>> atTag "BACKCOLOR" >>>
-    proc x -> do
-        color    <- text -< x
-        returnA -< (parseVector3 "," color)
+getBackgroud = atTag "BACKGROUND" >>> atTag "BACKCOLOR" >>> getVector3
 
 -- | Parses model author.
 getAuthor :: Field Author
 getAuthor = atTag "AUTHOR" >>>
     proc x -> do
-        name <- getObjectName -< x
+        name     <- getObjectName            -< x
         version  <- text <<< atTag "VERSION" -< x
         returnA -< Author name version
 
@@ -72,8 +83,8 @@ getLighting = atTag "LIGHTING" >>> catA [getAmbient, getDirectional, getSphere]
     getDirectional = atTag "DIRECTIONALLIGHT" >>>
         proc x -> do
             direction <- text <<< atTag "DIRECTION" -< x
-            diffuse   <- text <<< atTag "DIFFUSE" -< x
-            specular  <- text <<< atTag "SPECULAR" -< x
+            diffuse   <- text <<< atTag "DIFFUSE"   -< x
+            specular  <- text <<< atTag "SPECULAR"  -< x
             returnA  -< LightingTagDirectional
                 (parseVector3 "," direction)
                 (parseVector3 "," diffuse)
@@ -88,6 +99,19 @@ getLighting = atTag "LIGHTING" >>> catA [getAmbient, getDirectional, getSphere]
             returnA -< LightingTagSphereMap
                 (parseVector3 "," center)
                 (read radius)
+
+-- | Parses mesh tags.
+getMesh :: Field Mesh
+getMesh = atTag "MESH" >>>
+    proc x -> do
+        id       <- getAttrValue0 "ID"               -< x
+        vertices <- listA (getVector3 <<< atTag "P") -< x
+        normals  <- listA (getVector3 <<< atTag "N") -< x
+        returnA -< Mesh
+          { meshID       = (read id)
+          , meshVertices = vertices
+          , meshNormals  = normals
+          }
 
 -- | Parses model file content.
 getModel :: String -> Field Model

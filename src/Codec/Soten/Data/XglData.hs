@@ -3,6 +3,7 @@ module Codec.Soten.Data.XglData (
     Model(..)
   , Author(..)
   , LightingTag(..)
+  , Mesh(..)
 ) where
 
 import           Linear
@@ -44,6 +45,18 @@ data Author =
       authorName    :: !String
       -- | The version of the model file. Contains "." as a delimiter.
     , authorVersion :: !String
+    } deriving Show
+
+-- | A collection of related triangles, lines and points that approximate a
+-- 3D object.
+data Mesh =
+    Mesh
+    { -- | Defined in the current scope.
+      meshID       :: !Int
+      -- | Represents a position in a 3D coordinate space.
+    , meshVertices :: ![V3 Float]
+      -- | Represents a position in a 3D coordinate space.
+    , meshNormals  :: ![V3 Float]
     } deriving Show
 
 -- | Data structure to store all stl-specific model datum.
