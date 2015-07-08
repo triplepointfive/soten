@@ -12,6 +12,7 @@ import           Data.Maybe
 
 import           Linear
                  ( V3(..)
+                 , V2(..)
                  )
 import           Text.XML.HXT.Core
 
@@ -20,9 +21,12 @@ import           Codec.Soten.Data.XglData
                  , Mesh(..)
                  , Author(..)
                  , LightingTag(..)
+                 , Face(..)
+                 , Vertex(..)
                  )
 import           Codec.Soten.Util
                  ( parseVector3
+                 , parseVector2
                  )
 
 -- | Shortcut for parser declarations.
@@ -44,7 +48,13 @@ atAttr tag = deep (isElem >>> hasAttr tag)
 getMaybe :: Field c -> Field (Maybe c)
 getMaybe arrow = (arrow >>> arr Just) `orElse` (constA Nothing)
 
--- | Parses a vertex.
+-- | Parses a 2x vector.
+getVector2 :: Field (V2 Float)
+getVector2 = proc x -> do
+    vertex   <- text -< x
+    returnA -< parseVector2 "," vertex
+
+-- | Parses a 3x vector.
 getVector3 :: Field (V3 Float)
 getVector3 = proc x -> do
     vertex   <- text -< x
@@ -104,14 +114,44 @@ getLighting = atTag "LIGHTING" >>> catA [getAmbient, getDirectional, getSphere]
 getMesh :: Field Mesh
 getMesh = atTag "MESH" >>>
     proc x -> do
-        id       <- getAttrValue0 "ID"               -< x
-        vertices <- listA (getVector3 <<< atTag "P") -< x
-        normals  <- listA (getVector3 <<< atTag "N") -< x
+        idMesh   <- getAttrValue0 "ID"                -< x
+        vertices <- listA (getVector3 <<< atTag "P")  -< x
+        normals  <- listA (getVector3 <<< atTag "N")  -< x
+        textureC <- listA (getVector2 <<< atTag "TC") -< x
         returnA -< Mesh
-          { meshID       = (read id)
-          , meshVertices = vertices
-          , meshNormals  = normals
-          }
+            { meshID                 = read idMesh
+            , meshPositions          = vertices
+            , meshNormals            = normals
+            , meshTextureCoordinates = textureC
+            }
+
+-- | Parses vertex references.
+getVertex :: String -> Field Vertex
+getVertex parent = atTag parent >>>
+    proc x -> do
+        pRef     <- text <<< atTag "PREF"             -< x
+        nRef     <- getMaybe (text <<< atTag "NREF")  -< x
+        tcRef    <- getMaybe (text <<< atTag "TCREF") -< x
+        returnA -< Vertex
+            { vertexPosition = read pRef
+            , vertexNormal   = fmap read nRef
+            , vertexTexture  = fmap read tcRef
+            }
+
+-- | Parses face tag.
+getFace :: Field Face
+getFace = atTag "F" >>>
+    proc x -> do
+        matID    <- text <<< atTag "MATREF" -< x
+        vertex1  <- getVertex "FV1"         -< x
+        vertex2  <- getVertex "FV2"         -< x
+        vertex3  <- getVertex "FV3"         -< x
+        returnA -< Face
+            { faceMaterial = read matID
+            , faceVertex1  = vertex1
+            , faceVertex2  = vertex2
+            , faceVertex3  = vertex3
+            }
 
 -- | Parses model file content.
 getModel :: String -> Field Model

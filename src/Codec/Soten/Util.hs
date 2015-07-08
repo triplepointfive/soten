@@ -9,6 +9,7 @@ module Codec.Soten.Util (
   , nothing
   , tryReadFile
   , parseVector3
+  , parseVector2
 ) where
 
 import           Control.Exception (IOException, try, Exception, throw)
@@ -18,7 +19,7 @@ import           Data.Typeable (Typeable)
 import           System.FilePath (takeExtension)
 
 import           Data.String.Utils (split)
-import           Linear (V3(..))
+import           Linear (V3(..), V2(..))
 import           Safe (readMay)
 
 data CheckType
@@ -46,6 +47,17 @@ parseVector3 delim line = case tokens of
     _ -> parseError
   where
     tokens = map (fromMaybe parseError . readMay) $ take 3
+        $ filter (not . null) $ split delim line
+    parseError = throw $ DeadlyImporterError $
+        "Failed to getVertex for line: '" ++ line ++ "' and delimeter: '"
+            ++ delim ++ "'"
+
+parseVector2 :: String -> String -> V2 Float
+parseVector2 delim line = case tokens of
+    [x, y] -> V2 x y
+    _ -> parseError
+  where
+    tokens = map (fromMaybe parseError . readMay) $ take 2
         $ filter (not . null) $ split delim line
     parseError = throw $ DeadlyImporterError $
         "Failed to getVertex for line: '" ++ line ++ "' and delimeter: '"

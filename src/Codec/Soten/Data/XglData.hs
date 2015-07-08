@@ -4,10 +4,17 @@ module Codec.Soten.Data.XglData (
   , Author(..)
   , LightingTag(..)
   , Mesh(..)
+  , Face(..)
+  , Vertex(..)
 ) where
 
 import           Linear
                  ( V3(..)
+                 , V2(..)
+                 )
+
+import           Codec.Soten.Types
+                 ( Index
                  )
 
 -- | Describes the lighting in an environment.
@@ -52,11 +59,38 @@ data Author =
 data Mesh =
     Mesh
     { -- | Defined in the current scope.
-      meshID       :: !Int
+      meshID                 :: !Int
       -- | Represents a position in a 3D coordinate space.
-    , meshVertices :: ![V3 Float]
+    , meshPositions          :: ![V3 Float]
       -- | Represents a position in a 3D coordinate space.
-    , meshNormals  :: ![V3 Float]
+    , meshNormals            :: ![V3 Float]
+      -- | Represents a position on the 2D space of a texture.
+    , meshTextureCoordinates :: ![V2 Float]
+    } deriving Show
+
+-- | Represents a vertex with required position and optional normal and texture
+-- coordinates.
+data Vertex =
+    Vertex
+    { -- | Position tag reference.
+      vertexPosition :: !Index
+      -- | Normal tag reference.
+    , vertexNormal   :: !(Maybe Index)
+      -- | Texture tag reference.
+    , vertexTexture  :: !(Maybe Index)
+    } deriving Show
+
+-- | Represents a triangular face that is part of a 3D object.
+data Face =
+    Face
+    { -- | Material tag.
+      faceMaterial :: !Index
+      -- | Vertex 1.
+    , faceVertex1  :: !Vertex
+      -- | Vertex 2.
+    , faceVertex2  :: !Vertex
+      -- | Vertex 3.
+    , faceVertex3  :: !Vertex
     } deriving Show
 
 -- | Data structure to store all stl-specific model datum.
