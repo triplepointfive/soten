@@ -66,6 +66,8 @@ data Mesh =
     , meshNormals            :: ![V3 Float]
       -- | Represents a position on the 2D space of a texture.
     , meshTextureCoordinates :: ![V2 Float]
+      -- | Faces list.
+    , meshFaces              :: ![Face]
     } deriving Show
 
 -- | Represents a vertex with required position and optional normal and texture
@@ -103,6 +105,6 @@ data Model =
     , modelLightingTags    :: ![LightingTag]
       -- | Displayable name for an object or world.
     , modelName            :: !(Maybe String)
-      -- | Original author
+      -- | Original author.
     , modelAuthor          :: !(Maybe Author)
     } deriving Show

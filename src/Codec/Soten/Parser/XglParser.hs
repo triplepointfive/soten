@@ -118,11 +118,13 @@ getMesh = atTag "MESH" >>>
         vertices <- listA (getVector3 <<< atTag "P")  -< x
         normals  <- listA (getVector3 <<< atTag "N")  -< x
         textureC <- listA (getVector2 <<< atTag "TC") -< x
+        faces    <- listA (getFace)                   -< x
         returnA -< Mesh
             { meshID                 = read idMesh
             , meshPositions          = vertices
             , meshNormals            = normals
             , meshTextureCoordinates = textureC
+            , meshFaces              = faces
             }
 
 -- | Parses vertex references.
