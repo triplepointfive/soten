@@ -4,6 +4,7 @@ module Codec.Soten.Data.XglData (
   , Author(..)
   , LightingTag(..)
   , Mesh(..)
+  , Material(..)
   , Face(..)
   , Vertex(..)
 ) where
@@ -43,7 +44,7 @@ data LightingTag
       -- | A scalar that specifies the radius of the sphere map.
     , lightingTagSphereMapRadius :: !Float
     }
-    deriving Show
+    deriving (Show, Eq)
 
 -- | Determines the original author of the file.
 data Author =
@@ -68,6 +69,30 @@ data Mesh =
     , meshTextureCoordinates :: ![V2 Float]
       -- | Faces list.
     , meshFaces              :: ![Face]
+      -- | Materials list.
+    , meshMaterials          :: ![Material]
+    } deriving Show
+
+-- | Represents the way that a surface interacts with the light that hits it.
+data Material =
+    Material
+    { -- | Defined in the current scope.
+      materialID       :: !Int
+      -- | The fraction of ambient red, green, and blue light that the object
+      -- reflects.
+    , materialAmbient  :: !(V3 Float)
+      -- | The fraction of diffuse red, green, and blue light that the object
+      -- reflects.
+    , materialDiffuse  :: !(V3 Float)
+      -- | The fraction of specular red, green, and blue light that the object
+      -- reflects.
+    , materialSpecular :: !(Maybe (V3 Float))
+      -- | The amount of red, green, and blue light that the object emits.
+    , materialEmiss    :: !(Maybe (V3 Float))
+      -- | Indicates how opaque the material is.
+    , materialShine    :: !(Maybe Float)
+      -- | Indicates how a specular reflection from the material drops off.
+    , materialAlpha    :: !(Maybe Float)
     } deriving Show
 
 -- | Represents a vertex with required position and optional normal and texture
@@ -107,4 +132,6 @@ data Model =
     , modelName            :: !(Maybe String)
       -- | Original author.
     , modelAuthor          :: !(Maybe Author)
+      -- | List of model meshes.
+    , modelMeshes          :: ![Mesh]
     } deriving Show

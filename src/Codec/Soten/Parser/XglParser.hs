@@ -4,6 +4,7 @@
 module Codec.Soten.Parser.XglParser (
     getModel
   , getBackgroud
+  , getLighting
 ) where
 
 import           Data.Maybe
@@ -21,6 +22,7 @@ import           Codec.Soten.Data.XglData
                  , Mesh(..)
                  , Author(..)
                  , LightingTag(..)
+                 , Material(..)
                  , Face(..)
                  , Vertex(..)
                  )
@@ -46,7 +48,7 @@ atAttr tag = deep (isElem >>> hasAttr tag)
 
 -- | Maybe parses a value, maybe not.
 getMaybe :: Field c -> Field (Maybe c)
-getMaybe arrow = (arrow >>> arr Just) `orElse` (constA Nothing)
+getMaybe arrow = (arrow >>> arr Just) `orElse` constA Nothing
 
 -- | Parses a 2x vector.
 getVector2 :: Field (V2 Float)
@@ -118,13 +120,15 @@ getMesh = atTag "MESH" >>>
         vertices <- listA (getVector3 <<< atTag "P")  -< x
         normals  <- listA (getVector3 <<< atTag "N")  -< x
         textureC <- listA (getVector2 <<< atTag "TC") -< x
-        faces    <- listA (getFace)                   -< x
+        faces    <- listA getFace                     -< x
+        mats     <- listA getMaterial                 -< x
         returnA -< Mesh
             { meshID                 = read idMesh
             , meshPositions          = vertices
             , meshNormals            = normals
             , meshTextureCoordinates = textureC
             , meshFaces              = faces
+            , meshMaterials          = mats
             }
 
 -- | Parses vertex references.
@@ -138,6 +142,27 @@ getVertex parent = atTag parent >>>
             { vertexPosition = read pRef
             , vertexNormal   = fmap read nRef
             , vertexTexture  = fmap read tcRef
+            }
+
+-- | Parses material tag.
+getMaterial :: Field Material
+getMaterial = atTag "MAT" >>>
+    proc x -> do
+        matID    <- getAttrValue0 "ID"                      -< x
+        amb      <- getVector3 <<< atTag "AMB"              -< x
+        diff     <- getVector3 <<< atTag "DIFF"             -< x
+        spec     <- getMaybe (getVector3 <<< atTag "SPEC")  -< x
+        emiss    <- getMaybe (getVector3 <<< atTag "EMISS") -< x
+        shine    <- getMaybe (text <<< atTag "SHINE")       -< x
+        alpha    <- getMaybe (text <<< atTag "ALPHA")       -< x
+        returnA -< Material
+            { materialID       = read matID
+            , materialAmbient  = amb
+            , materialDiffuse  = diff
+            , materialSpecular = spec
+            , materialEmiss    = emiss
+            , materialShine    = fmap read shine
+            , materialAlpha    = fmap read alpha
             }
 
 -- | Parses face tag.
@@ -163,9 +188,11 @@ getModel fileContent = atTag "WORLD" >>>
         lights     <- listA getLighting      -< x
         author     <- getMaybe getAuthor     -< x
         background <- getBackgroud           -< x
+        meshes     <- listA getMesh          -< x
         returnA   -< Model
             { modelBackgroundColor = background
             , modelLightingTags    = lights
             , modelName            = name
             , modelAuthor          = author
+            , modelMeshes          = meshes
             }
