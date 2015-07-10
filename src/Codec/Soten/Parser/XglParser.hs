@@ -25,6 +25,7 @@ import           Codec.Soten.Data.XglData
                  , Material(..)
                  , Face(..)
                  , Vertex(..)
+                 , Transform(..)
                  )
 import           Codec.Soten.Util
                  ( parseVector3
@@ -178,6 +179,21 @@ getFace = atTag "F" >>>
             , faceVertex1  = vertex1
             , faceVertex2  = vertex2
             , faceVertex3  = vertex3
+            }
+
+-- | Parses transform tag.
+getTransform :: Field Transform
+getTransform = atTag "TRANSFORM" >>>
+    proc x -> do
+        forward <- getVector3 <<< atTag "FORWARD" -< x
+        up <- getVector3 <<< atTag "UP" -< x
+        position <- getVector3 <<< atTag "POSITION" -< x
+        scale <- getMaybe (getVector3 <<< atTag "POSITION") -< x
+        returnA -< Transform
+            { transForward  = forward
+            , transUp       = up
+            , transPosition = position
+            , transScale    = scale
             }
 
 -- | Parses model file content.

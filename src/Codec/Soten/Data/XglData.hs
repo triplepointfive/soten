@@ -7,6 +7,7 @@ module Codec.Soten.Data.XglData (
   , Material(..)
   , Face(..)
   , Vertex(..)
+  , Transform(..)
 ) where
 
 import           Linear
@@ -118,6 +119,30 @@ data Face =
     , faceVertex2  :: !Vertex
       -- | Vertex 3.
     , faceVertex3  :: !Vertex
+    } deriving Show
+
+-- | represents a non-skewing three-dimensional transform.
+data Transform =
+    Transform
+    { -- | The positive Z-axis of transformed points will point in the direction
+      -- of this vector.
+      transForward  :: !(V3 Float)
+      -- | The positive Y-axis of transformed points will point as closely as
+      -- possible to this vector.
+    , transUp       :: !(V3 Float)
+      -- | Points are translated so that the origin in the original space is
+      -- moved to specified position.
+    , transPosition :: !(V3 Float)
+      -- | Points are scaled toward the origin of their original space by the
+      -- specified scaling amount.
+    , transScale    :: !(Maybe (V3 Float))
+    } deriving Show
+
+-- | Represents a 3D object at a specific location in the world.
+data Object =
+    Object
+    {
+
     } deriving Show
 
 -- | Data structure to store all stl-specific model datum.
