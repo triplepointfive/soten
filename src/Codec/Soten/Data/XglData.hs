@@ -8,6 +8,7 @@ module Codec.Soten.Data.XglData (
   , Face(..)
   , Vertex(..)
   , Transform(..)
+  , Object(..)
 ) where
 
 import           Linear
@@ -54,7 +55,7 @@ data Author =
       authorName    :: !String
       -- | The version of the model file. Contains "." as a delimiter.
     , authorVersion :: !String
-    } deriving Show
+    } deriving (Show, Eq)
 
 -- | A collection of related triangles, lines and points that approximate a
 -- 3D object.
@@ -72,7 +73,7 @@ data Mesh =
     , meshFaces              :: ![Face]
       -- | Materials list.
     , meshMaterials          :: ![Material]
-    } deriving Show
+    } deriving (Show, Eq)
 
 -- | Represents the way that a surface interacts with the light that hits it.
 data Material =
@@ -94,7 +95,7 @@ data Material =
     , materialShine    :: !(Maybe Float)
       -- | Indicates how a specular reflection from the material drops off.
     , materialAlpha    :: !(Maybe Float)
-    } deriving Show
+    } deriving (Show, Eq)
 
 -- | Represents a vertex with required position and optional normal and texture
 -- coordinates.
@@ -106,7 +107,7 @@ data Vertex =
     , vertexNormal   :: !(Maybe Index)
       -- | Texture tag reference.
     , vertexTexture  :: !(Maybe Index)
-    } deriving Show
+    } deriving (Show, Eq)
 
 -- | Represents a triangular face that is part of a 3D object.
 data Face =
@@ -119,9 +120,9 @@ data Face =
     , faceVertex2  :: !Vertex
       -- | Vertex 3.
     , faceVertex3  :: !Vertex
-    } deriving Show
+    } deriving (Show, Eq)
 
--- | represents a non-skewing three-dimensional transform.
+-- | Represents a non-skewing three-dimensional transform.
 data Transform =
     Transform
     { -- | The positive Z-axis of transformed points will point in the direction
@@ -136,14 +137,17 @@ data Transform =
       -- | Points are scaled toward the origin of their original space by the
       -- specified scaling amount.
     , transScale    :: !(Maybe (V3 Float))
-    } deriving Show
+    } deriving (Show, Eq)
 
 -- | Represents a 3D object at a specific location in the world.
 data Object =
     Object
-    {
-
-    } deriving Show
+    { -- | This transform is used to map the mesh into the space of the parent
+      -- tag.
+      objectTransform :: !(Maybe Transform)
+      -- | Mesh tag reference.
+    , objectMesh      :: !(Maybe Index)
+    } deriving (Show, Eq)
 
 -- | Data structure to store all stl-specific model datum.
 data Model =
@@ -159,4 +163,7 @@ data Model =
     , modelAuthor          :: !(Maybe Author)
       -- | List of model meshes.
     , modelMeshes          :: ![Mesh]
-    } deriving Show
+      -- | List of model objects.
+    , modelObjects         :: ![Object]
+    } deriving (Show, Eq)
+

@@ -3,7 +3,6 @@ module Codec.Soten.Parser.XglParserTest where
 
 import Test.Hspec
 
-import Control.Lens
 import Linear
 import Text.XML.HXT.Core
 
@@ -23,5 +22,22 @@ xglParserTest = do
         vec <- loadModelField getLighting
         vec `shouldBe`
           [ LightingTagAmbient (V3 0.0 0.0 0.0)
-          , LightingTagDirectional (V3 0.302 (-0.302) (-0.905)) (V3 1.0 1.0 1.0) (V3 0.1 0.1 0.1)
+          , LightingTagDirectional
+            { lightingTagDirectionalDirection = V3 0.302 (-0.302) (-0.905)
+            , lightingTagDirectionalDiffuse   = V3 1.0 1.0 1.0
+            , lightingTagDirectionalSpecular  = V3 0.1 0.1 0.1
+            }
+          ]
+      it "Material" $ do
+        vec <-  loadModelField getMaterial
+        vec `shouldBe`
+          [ Material
+            { materialID = 0
+            , materialAmbient  = V3 0.0 1.0 0.0
+            , materialDiffuse  = V3 0.0 1.0 0.0
+            , materialSpecular = Just (V3 1.0 1.0 1.0)
+            , materialEmiss    = Just (V3 0.0 0.0 0.0)
+            , materialShine    = Just 64.0
+            , materialAlpha    = Just 1.0
+            }
           ]

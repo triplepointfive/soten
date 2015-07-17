@@ -5,11 +5,8 @@ module Codec.Soten.Parser.XglParser (
     getModel
   , getBackgroud
   , getLighting
+  , getMaterial
 ) where
-
-import           Data.Maybe
-                 ( listToMaybe
-                 )
 
 import           Linear
                  ( V3(..)
@@ -26,6 +23,7 @@ import           Codec.Soten.Data.XglData
                  , Face(..)
                  , Vertex(..)
                  , Transform(..)
+                 , Object(..)
                  )
 import           Codec.Soten.Util
                  ( parseVector3
@@ -42,10 +40,6 @@ text = getChildren >>> getText
 -- | Helper for tags.
 atTag :: ArrowXml cat => String -> cat XmlTree XmlTree
 atTag tag = deep (isElem >>> hasName tag)
-
--- | Helper for attributes.
-atAttr :: ArrowXml cat => String -> cat XmlTree XmlTree
-atAttr tag = deep (isElem >>> hasAttr tag)
 
 -- | Maybe parses a value, maybe not.
 getMaybe :: Field c -> Field (Maybe c)
@@ -185,10 +179,10 @@ getFace = atTag "F" >>>
 getTransform :: Field Transform
 getTransform = atTag "TRANSFORM" >>>
     proc x -> do
-        forward <- getVector3 <<< atTag "FORWARD" -< x
-        up <- getVector3 <<< atTag "UP" -< x
-        position <- getVector3 <<< atTag "POSITION" -< x
-        scale <- getMaybe (getVector3 <<< atTag "POSITION") -< x
+        forward  <- getVector3 <<< atTag "FORWARD"             -< x
+        up       <- getVector3 <<< atTag "UP"                  -< x
+        position <- getVector3 <<< atTag "POSITION"            -< x
+        scale    <- getMaybe (getVector3 <<< atTag "POSITION") -< x
         returnA -< Transform
             { transForward  = forward
             , transUp       = up
@@ -196,19 +190,38 @@ getTransform = atTag "TRANSFORM" >>>
             , transScale    = scale
             }
 
--- | Parses model file content.
-getModel :: String -> Field Model
-getModel fileContent = atTag "WORLD" >>>
+-- | Parses object tag.
+getObject :: Field Object
+getObject = atTag "OBJECT" >>>
+    proc x -> do
+        mesh     <- getMaybe (text <<< atTag "MESHREF") -< x
+        trans    <- getMaybe getTransform               -< x
+        returnA -< Object
+            { objectTransform = trans
+            , objectMesh      = fmap read mesh
+            }
+
+getWorld :: Field Model
+getWorld = atTag "WORLD" >>>
     proc x -> do
         name       <- getMaybe getObjectName -< x
         lights     <- listA getLighting      -< x
         author     <- getMaybe getAuthor     -< x
         background <- getBackgroud           -< x
         meshes     <- listA getMesh          -< x
+        objects    <- listA getObject        -< x
         returnA   -< Model
             { modelBackgroundColor = background
             , modelLightingTags    = lights
             , modelName            = name
             , modelAuthor          = author
             , modelMeshes          = meshes
+            , modelObjects         = objects
             }
+
+-- | Parses model file content.
+getModel :: String -> IO Model
+getModel fileContent = head <$> runX (doc >>> getWorld)
+  where
+    doc = readString [withWarnings yes] fileContent
+
