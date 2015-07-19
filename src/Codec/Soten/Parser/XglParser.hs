@@ -201,6 +201,7 @@ getObject = atTag "OBJECT" >>>
             , objectMesh      = fmap read mesh
             }
 
+-- | Parses world tag.
 getWorld :: Field Model
 getWorld = atTag "WORLD" >>>
     proc x -> do
