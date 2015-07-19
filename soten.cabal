@@ -75,6 +75,7 @@ Test-Suite test-soten
                      , unix
                      , vector
                      , hxt
+                     , zlib
   buildable:          True
   cpp-options:        -DTEST_MODE=true
   hs-source-dirs:     src test
