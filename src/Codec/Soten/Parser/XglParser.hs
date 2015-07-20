@@ -179,15 +179,15 @@ getFace = atTag "F" >>>
 getTransform :: Field Transform
 getTransform = atTag "TRANSFORM" >>>
     proc x -> do
-        forward  <- getVector3 <<< atTag "FORWARD"             -< x
-        up       <- getVector3 <<< atTag "UP"                  -< x
-        position <- getVector3 <<< atTag "POSITION"            -< x
-        scale    <- getMaybe (getVector3 <<< atTag "POSITION") -< x
+        forward  <- getVector3 <<< atTag "FORWARD"    -< x
+        up       <- getVector3 <<< atTag "UP"         -< x
+        position <- getVector3 <<< atTag "POSITION"   -< x
+        scale    <- getMaybe (text <<< atTag "SCALE") -< x
         returnA -< Transform
             { transForward  = forward
             , transUp       = up
             , transPosition = position
-            , transScale    = scale
+            , transScale    = fmap read scale
             }
 
 -- | Parses object tag.

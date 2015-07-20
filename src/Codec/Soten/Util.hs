@@ -10,6 +10,7 @@ module Codec.Soten.Util (
   , tryReadFile
   , parseVector3
   , parseVector2
+  , squareLength
 ) where
 
 import           Control.Exception (IOException, try, Exception, throw)
@@ -40,6 +41,9 @@ nothing _ a        = a
 
 tryReadFile :: FilePath -> IO (Either IOException String)
 tryReadFile filePath = try (readFile filePath)
+
+squareLength :: V3 Float -> Float
+squareLength (V3 x y z) = x * x + y * y + z * z
 
 parseVector3 :: String -> String -> V3 Float
 parseVector3 delim line = case tokens of

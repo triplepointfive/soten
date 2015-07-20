@@ -136,7 +136,7 @@ data Transform =
     , transPosition :: !(V3 Float)
       -- | Points are scaled toward the origin of their original space by the
       -- specified scaling amount.
-    , transScale    :: !(Maybe (V3 Float))
+    , transScale    :: !(Maybe Float)
     } deriving (Show, Eq)
 
 -- | Represents a 3D object at a specific location in the world.
