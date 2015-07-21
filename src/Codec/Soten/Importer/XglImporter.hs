@@ -12,6 +12,10 @@ module Codec.Soten.Importer.XglImporter (
   , transformToScene
 ) where
 
+import           Data.Maybe
+                 ( catMaybes
+                 )
+
 import qualified Data.ByteString.Lazy as ByteString
                  ( readFile
                  )
@@ -62,6 +66,7 @@ import           Codec.Soten.Scene.Light
                  )
 import           Codec.Soten.Scene.Material as S
                  ( Material(..)
+                 , MaterialProperty(..)
                  , newMaterial
                  , addProperty
                  )
@@ -132,6 +137,22 @@ transformLights = foldl tagToLight []
 -- | Transforms internal material into scene's ones.
 transformMaterials :: [X.Material] -> [S.Material]
 transformMaterials materials = undefined
+  where
+    -- TODO: Material id is missing!
+    sceneMat X.Material{..} =
+        foldl addProperty newMaterial (requiredProperties ++ optionalProperties)
+      where
+        requiredProperties =
+          [ MaterialName "DefaultMaterial"
+          , MaterialColorAmbient materialAmbient
+          , MaterialColorDiffuse materialDiffuse
+          ]
+        optionalProperties = catMaybes
+          [ fmap MaterialColorSpecular materialSpecular
+          , fmap MaterialColorEmissive materialEmiss
+          , fmap MaterialColorShininess materialShine
+          , fmap MaterialColorOpacity materialAlpha
+          ]
 
 -- | Calculates matrix of transformation.
 transformation :: Transform -> M44 Float
@@ -144,5 +165,5 @@ transformation Transform{..}
     forward      = normalize transForward
     up           = normalize transUp
     right        = forward `cross` up
-    rotateMatrix = (V3 right up forward)
+    rotateMatrix = V3 right up forward
     scaledRotMat = maybe rotateMatrix (rotateMatrix !!* ) transScale

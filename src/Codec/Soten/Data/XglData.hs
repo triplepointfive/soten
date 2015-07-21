@@ -1,4 +1,9 @@
 -- | Contains internal data structures which represents original datum.
+{- Parser notes:
+  - Face vertex only, no point or line vertices allowed.
+  - Vertex tag allows only <PREF> tags, no inline <P> tags allowed. Same for
+    normals and texture coordinates.
+-}
 module Codec.Soten.Data.XglData (
     Model(..)
   , Author(..)
