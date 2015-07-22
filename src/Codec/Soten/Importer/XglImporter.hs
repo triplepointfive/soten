@@ -12,6 +12,9 @@ module Codec.Soten.Importer.XglImporter (
   , transformToScene
 ) where
 
+import           Data.List
+                 ( intercalate
+                 )
 import           Data.Maybe
                  ( catMaybes
                  )
@@ -22,8 +25,10 @@ import qualified Data.ByteString.Lazy as ByteString
 import           Data.ByteString.Lazy.Char8
                  ( unpack
                  )
-import           Data.Vector
+import qualified Data.Vector as V
                  ( fromList
+                 , length
+                 , replicate
                  )
 import           Codec.Compression.Zlib
                  ( decompress
@@ -50,7 +55,10 @@ import           Codec.Soten.Data.XglData as X
                  ( Model(..)
                  , LightingTag(..)
                  , Material(..)
+                 , Mesh(..)
+                 , Face(..)
                  , Transform(..)
+                 , Vertex(..)
                  )
 import qualified Codec.Soten.Parser.XglParser as Parser
                  ( getModel
@@ -70,10 +78,22 @@ import           Codec.Soten.Scene.Material as S
                  , newMaterial
                  , addProperty
                  )
+import           Codec.Soten.Scene.Mesh as S
+                 ( Mesh(..)
+                 , PrimitiveType(..)
+                 , Face(..)
+                 , newMesh
+                 , meshPrimitiveTypes
+                 , meshNormals
+                 , meshVertices
+                 , meshFaces
+                 , meshMaterialIndex
+                 )
 import           Codec.Soten.Scene
                  ( Scene(..)
                  , newScene
                  , sceneLights
+                 , sceneMaterials
                  )
 import           Codec.Soten.Util
                  ( CheckType(..)
@@ -115,10 +135,12 @@ parseModelFile filePath =
 transformToScene :: Model -> Scene
 transformToScene Model{..} =
     newScene
-        -- & sceneMaterials .~ V.singleton mat
+        & sceneMaterials .~ V.fromList (transformMaterials materials)
         -- & sceneMeshes    .~ V.singleton mesh
         -- & sceneRootNode  .~ Just node
-        & sceneLights .~ fromList (transformLights modelLightingTags)
+        & sceneLights .~ V.fromList (transformLights modelLightingTags)
+  where
+    materials = intercalate [] $ map meshMaterials modelMeshes
 
 -- | Transforms direction light into Light object.
 transformLights :: [LightingTag] -> [Light]
@@ -136,7 +158,7 @@ transformLights = foldl tagToLight []
 
 -- | Transforms internal material into scene's ones.
 transformMaterials :: [X.Material] -> [S.Material]
-transformMaterials materials = undefined
+transformMaterials = map sceneMat
   where
     -- TODO: Material id is missing!
     sceneMat X.Material{..} =
@@ -167,3 +189,26 @@ transformation Transform{..}
     right        = forward `cross` up
     rotateMatrix = V3 right up forward
     scaledRotMat = maybe rotateMatrix (rotateMatrix !!* ) transScale
+
+-- | Transforms internal mesh structure into global one.
+transformMeshes :: [X.Mesh] -> [S.Mesh]
+transformMeshes = map sceneMesh
+  where
+    sceneMesh X.Mesh{..} =
+        newMesh
+            & S.meshNormals      .~ normals
+            & meshVertices       .~ vertices
+            & S.meshFaces        .~ V.fromList (map mkFace meshFaces)
+            & meshMaterialIndex  .~ Just 0 -- TODO: Retrive index from mat list.
+            & meshPrimitiveTypes .~
+                V.replicate (V.length normals `div` 3) PrimitiveTriangle
+      where
+        vertices = V.fromList meshPositions
+        normals  = V.fromList meshNormals
+        mkFace :: X.Face -> S.Face
+        mkFace (X.Face _ v1 v2 v3) =
+            S.Face (V.fromList
+                [ vertexPosition v1
+                , vertexPosition v2
+                , vertexPosition v3 ])
+
