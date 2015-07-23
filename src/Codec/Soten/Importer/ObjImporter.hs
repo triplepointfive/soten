@@ -66,7 +66,7 @@ createDataFromImport :: Model -> IO (Either String Scene)
 createDataFromImport model = return $ Right (createMaterials model scene)
   where
     (meshes, rootNode) = createNodes model
-    scene = newScene & sceneRootNode .~ Just rootNode
+    scene = newScene & sceneRootNode .~ rootNode
         & sceneMeshes .~ meshes
 
 -- | Creates nodes from model\'s objects.

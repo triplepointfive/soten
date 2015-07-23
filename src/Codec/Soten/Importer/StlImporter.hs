@@ -85,7 +85,7 @@ internalReadFile filePath = do
     model <- getModel filePath
     let scene = newScene & sceneMaterials .~ V.singleton mat
             & sceneMeshes .~ V.singleton mesh
-            & sceneRootNode .~ Just node
+            & sceneRootNode .~ node
         mesh = getMesh model
         node = newNode & nodeMeshes .~ V.singleton 0
         in return $ Right scene

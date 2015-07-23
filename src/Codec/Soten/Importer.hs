@@ -125,6 +125,6 @@ findImporterWithExtension fileName checker importer =
 maybeHead :: Monad m => V.Vector a -> m (Maybe a)
 maybeHead vector = return (vector V.!? 0)
 
--- | Like 'maybe' function for boolean value.
+-- | Like "maybe" function for boolean value.
 bool :: a -> a -> Bool -> a
 bool f t b = if b then t else f
