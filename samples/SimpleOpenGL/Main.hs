@@ -2,12 +2,13 @@
 module Main where
 
 import Control.Monad
+import Data.Maybe
 import System.Exit
 
 import qualified Data.Vector as V
 import Graphics.UI.GLUT as GL
 
-import Codec.Soten
+import Codec.Soten as Soten
 
 data BoundingBox =
     BoundingBox
@@ -115,12 +116,73 @@ applyMaterial (Material properties) = do
         cullFace $= Nothing
     -- TODO: Check for shininess strength.
     setProperties (MaterialColorShininess shininess) =
-        materialShininess FrontAndBack $= shininess
-
-    v3ToColor :: V3 Float -> Color4 GLfloat
-    v3ToColor (V3 x y z) = Color4 (realToFrac x) (realToFrac y) (realToFrac z) 1
+        materialShininess FrontAndBack $= realToFrac shininess
+    setProperties _ = return ()
 
 display :: DisplayCallback
 display = do
     clear [ColorBuffer]
     flush
+
+render :: Scene -> Node -> IO ()
+render scene@Scene{..} Node{..} =
+    preservingMatrix $ do
+        when (isJust _nodeTransformation) $
+            let mat = transpose $ fromJust _nodeTransformation
+                matList = map realToFrac $ matToList mat :: [GLfloat]
+            in do
+              glMat <- newMatrix RowMajor matList :: IO (GLmatrix GLfloat)
+              multMatrix glMat
+
+        V.mapM_ renderMesh (V.map (_sceneMeshes V.!) _nodeMeshes)
+        V.mapM_ (render scene) _nodeChildren
+  where
+    matToList :: M44 a -> [a]
+    matToList (V4 (V4 a11 a12 a13 a14)
+                  (V4 a21 a22 a23 a24)
+                  (V4 a31 a32 a33 a34)
+                  (V4 a41 a42 a43 a44))
+        = [ a11, a12, a13, a14
+          , a21, a22, a23, a24
+          , a31, a32, a33, a34
+          , a41, a42, a43, a44
+          ]
+    renderMesh :: Mesh -> IO ()
+    renderMesh Mesh{..} = do
+        when (isJust _meshMaterialIndex) $
+            applyMaterial (_sceneMaterials V.! (fromJust _meshMaterialIndex))
+        if V.null _meshNormals
+           then lighting $= Disabled
+           else lighting $= Enabled
+        V.mapM_ renderFace _meshFaces
+      where
+        renderFace :: Soten.Face -> IO ()
+        renderFace Face{..} = renderPrimitive faceMode $ do
+            V.mapM_ renderVertex _faceIndices
+          where
+            faceMode = case V.length _faceIndices of
+                1 -> Points
+                2 -> Lines
+                3 -> Triangles
+                _ -> Polygon
+            renderVertex :: Int -> IO ()
+            renderVertex index = do
+                when (isJust color) (GL.color (v4ToColor (fromJust color)))
+                when (isJust normal) (GL.normal (v3ToNormal (fromJust normal)))
+                vertex (v3ToVertex (_meshVertices V.! index))
+              where
+                color  = _meshColors V.!? index
+                normal = _meshNormals V.!? index
+
+v3ToVertex :: V3 Float -> Vertex3 GLfloat
+v3ToVertex (V3 x y z) = Vertex3 (realToFrac x) (realToFrac y) (realToFrac z)
+
+v3ToNormal :: V3 Float -> Normal3 GLfloat
+v3ToNormal (V3 x y z) = Normal3 (realToFrac x) (realToFrac y) (realToFrac z)
+
+v3ToColor :: V3 Float -> Color4 GLfloat
+v3ToColor (V3 x y z) = Color4 (realToFrac x) (realToFrac y) (realToFrac z) 1
+
+v4ToColor :: V4 Float -> Color4 GLfloat
+v4ToColor (V4 x y z a) =
+    Color4 (realToFrac x) (realToFrac y) (realToFrac z) (realToFrac a)

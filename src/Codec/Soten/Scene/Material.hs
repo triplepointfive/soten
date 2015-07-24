@@ -183,6 +183,8 @@ data MaterialProperty
     | MaterialTexture        !TextureType !String
     | MaterialMappingModeU   !TextureType !TextureMapMode
     | MaterialMappingModeV   !TextureType !TextureMapMode
+    | MaterialTwosided       !Bool
+    | MaterialWireframe      !Bool
     deriving (Show, Eq)
 
 -- | Data structure for a material.
