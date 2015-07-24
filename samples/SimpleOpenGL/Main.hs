@@ -86,6 +86,40 @@ reshape (Size width height) = do
     aspectRatio = fromIntegral width / fromIntegral height
     fieldOfView = 45.0
 
+-- | TODO: Fix me please
+applyMaterial :: Material -> IO ()
+applyMaterial (Material properties) = do
+    materialDiffuse   FrontAndBack $= Color4 0.8 0.8 0.8 1
+    materialSpecular  FrontAndBack $= Color4 0 0 0 1
+    materialAmbient   FrontAndBack $= Color4 0.2 0.2 0.2 1
+    materialEmission  FrontAndBack $= Color4 0 0 0 1
+    materialShininess FrontAndBack $= 0
+
+    polygonMode $= (Fill, Fill)
+    cullFace $= Just Back
+
+    mapM_ setProperties properties
+  where
+    setProperties :: MaterialProperty -> IO ()
+    setProperties (MaterialColorDiffuse color) =
+        materialDiffuse FrontAndBack $= v3ToColor color
+    setProperties (MaterialColorSpecular color) =
+        materialSpecular FrontAndBack $= v3ToColor color
+    setProperties (MaterialColorAmbient color) =
+        materialAmbient FrontAndBack $= v3ToColor color
+    setProperties (MaterialColorEmissive color) =
+        materialEmission FrontAndBack $= v3ToColor color
+    setProperties (MaterialWireframe True) =
+        polygonMode $= (Line, Line)
+    setProperties (MaterialTwosided True) =
+        cullFace $= Nothing
+    -- TODO: Check for shininess strength.
+    setProperties (MaterialColorShininess shininess) =
+        materialShininess FrontAndBack $= shininess
+
+    v3ToColor :: V3 Float -> Color4 GLfloat
+    v3ToColor (V3 x y z) = Color4 (realToFrac x) (realToFrac y) (realToFrac z) 1
+
 display :: DisplayCallback
 display = do
     clear [ColorBuffer]
