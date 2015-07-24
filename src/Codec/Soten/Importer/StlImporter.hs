@@ -115,7 +115,7 @@ getMesh model = newMesh
         V.empty (model ^. modelFacets)
 
     faces = V.imap (\ i _ -> Face (V.fromList [3 * i, 3 * i + 1, 3 * i + 2 ]))
-        vertices
+        (V.take (V.length vertices `div` 3) vertices)
 
 -- | Checks which wheter file has binary or ascii representation.
 getModel :: FilePath -> IO Model

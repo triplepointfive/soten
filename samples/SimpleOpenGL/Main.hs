@@ -3,6 +3,7 @@ module Main where
 
 import Control.Monad
 import Data.Maybe
+import Data.IORef
 import System.Exit
 
 import qualified Data.Vector as V
@@ -26,7 +27,6 @@ main = do
     initialWindowPosition $= Position 100 100
 
     createWindow "Soten - Very simple OpenGL sample"
-    displayCallback $= display
     reshapeCallback $= Just reshape
 
     when (null args) exitFailure
@@ -42,6 +42,11 @@ main = do
             colorMaterial      $= Just (FrontAndBack, Diffuse)
 
             elapsedTime
+
+            sceneRef <- newIORef scene
+            angleRef <- newIORef 45.0
+            idleCallback    $= Just (idle angleRef)
+            displayCallback $= display angleRef sceneRef (boundingBox scene)
 
             mainLoop
         Left msg -> do
@@ -119,10 +124,33 @@ applyMaterial (Material properties) = do
         materialShininess FrontAndBack $= realToFrac shininess
     setProperties _ = return ()
 
-display :: DisplayCallback
-display = do
-    clear [ColorBuffer]
-    flush
+idle :: IORef GLfloat -> IdleCallback
+idle angle = do
+    angle $~! (+ 0.01)
+    postRedisplay Nothing
+
+display :: IORef GLfloat -> IORef Scene -> BoundingBox -> DisplayCallback
+display angleRef sceneRef BoundingBox{..} = do
+    clear [ColorBuffer, DepthBuffer]
+    matrixMode $= Modelview 0
+    loadIdentity
+    GL.lookAt (Vertex3 0 0 3) (Vertex3 0 0 (-5)) (Vector3 0 1 0)
+
+    -- Rotate it around the y axis.
+    scale scaleKoef scaleKoef scaleKoef
+    angle <- readIORef angleRef
+    GL.rotate angle (Vector3 0 1 0 :: Vector3 GLfloat)
+    translate (v3ToVector $ fmap ((*(-1)) . realToFrac) sceneCenter)
+
+    scene <- readIORef sceneRef
+    render scene (_sceneRootNode scene)
+
+    -- Scale the whole asset to fit into our view frustum.
+    swapBuffers
+  where
+    scaleKoef = realToFrac $ 1 / maximum [tX, tY, tZ] :: GLfloat
+      where
+        (V3 tX tY tZ) = sceneMax - sceneMin
 
 render :: Scene -> Node -> IO ()
 render scene@Scene{..} Node{..} =
@@ -173,6 +201,9 @@ render scene@Scene{..} Node{..} =
               where
                 color  = _meshColors V.!? index
                 normal = _meshNormals V.!? index
+
+v3ToVector :: V3 Float -> Vector3 GLfloat
+v3ToVector (V3 x y z) = Vector3 (realToFrac x) (realToFrac y) (realToFrac z)
 
 v3ToVertex :: V3 Float -> Vertex3 GLfloat
 v3ToVertex (V3 x y z) = Vertex3 (realToFrac x) (realToFrac y) (realToFrac z)
