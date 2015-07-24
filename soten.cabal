@@ -88,6 +88,7 @@ executable SimpleOpenGL
                      , GLUT
                      , OpenGL
                      , soten
+                     , vector
   hs-source-dirs:      samples/SimpleOpenGL
   default-language:    Haskell2010
   ghc-options:         -W

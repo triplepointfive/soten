@@ -1,8 +1,10 @@
+{-# LANGUAGE RecordWildCards #-}
 module Main where
 
 import Control.Monad
 import System.Exit
 
+import qualified Data.Vector as V
 import Graphics.UI.GLUT as GL
 
 import Codec.Soten
@@ -46,28 +48,45 @@ main = do
             exitFailure
 
 boundingBox :: Scene -> BoundingBox
-boundingBox scene =
+boundingBox Scene{..} =
     BoundingBox
     { sceneMin    = minBound
     , sceneMax    = maxBound
-    , sceneCenter = centerBound
+    , sceneCenter = (minBound + maxBound) / 2
     }
   where
-    (minBound, maxBound) =
-        nodeBound
-            (_sceneRootNode scene)
-            (V3 1e10 1e10 1e10)
-            (V3 (-1e10) (-1e10) (-1e10))
-            identity
-    centerBound = (minBound + maxBound) / 2
+    initBounds = ((V3 1e10 1e10 1e10), (V3 (-1e10) (-1e10) (-1e10)))
+    (minBound, maxBound) = nodeBound identity initBounds _sceneRootNode
 
-nodeBound :: Node -> V3 Float -> V3 Float -> M44 Float -> (V3 Float, V3 Float)
-nodeBound node minVec maxVec trafo = undefined
+    nodeBound :: M44 Float -> (V3 Float, V3 Float) -> Node
+              -> (V3 Float, V3 Float) -- ^ Min and max bounds.
+    nodeBound trafo (minVec, maxVec) Node{..} =
+        V.foldl (nodeBound mTrafo) (minV, maxV) _nodeChildren
+      where
+        mTrafo = maybe trafo (trafo !*!) _nodeTransformation
+        (minV, maxV) = V.foldl meshBound (minVec, maxVec) nodeMeshes
+        nodeMeshes = V.map (_sceneMeshes V.!) _nodeMeshes
+
+        meshBound :: (V3 Float, V3 Float) -> Mesh -> (V3 Float, V3 Float)
+        meshBound bounds Mesh{..} = V.foldl compareV bounds _meshVertices
+
+    compareV :: (V3 Float, V3 Float) -> V3 Float -> (V3 Float, V3 Float)
+    compareV (V3 minX minY minZ, V3 maxX maxY maxZ) (V3 tX tY tZ) =
+        ( V3 (min minX tX) (min minY tY) (min minZ tZ)
+        , V3 (max maxX tX) (max maxY tY) (max maxZ tZ)
+        )
 
 reshape :: ReshapeCallback
-reshape = undefined
+reshape (Size width height) = do
+    matrixMode $= Projection
+    loadIdentity
+    GL.perspective fieldOfView aspectRatio 1.0 1000.0
+    viewport $= (Position 0 0, Size width height)
+  where
+    aspectRatio = fromIntegral width / fromIntegral height
+    fieldOfView = 45.0
 
 display :: DisplayCallback
 display = do
-  clear [ColorBuffer]
-  flush
+    clear [ColorBuffer]
+    flush
