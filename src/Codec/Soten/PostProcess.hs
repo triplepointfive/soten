@@ -7,6 +7,9 @@ module Codec.Soten.PostProcess (
   , targetRealtimeMaxQuality
 ) where
 
+import Codec.Soten.PostProcess.FindInvalidData as FindInvalidData
+import Codec.Soten.Scene
+
 -- | Flags for possible post processing steps.
 data PostProcessStep
       -- | Calculates the tangents and bitangents for the imported meshes.
@@ -75,6 +78,12 @@ data PostProcessStep
     | SplitByBoneCount
       -- | This step removes bones losslessly or according to some threshold.
     | Debone
+    deriving (Show, Eq)
+
+-- | Applies a post process on scene.
+applyPostProcess :: Scene -> PostProcessStep -> Scene
+applyPostProcess scene FindInvalidData = FindInvalidData.apply scene
+applyPostProcess scene _ = scene
 
 -- | Shortcut flag for Direct3D-based applications.
 convertToLeftHanded :: [PostProcessStep]
