@@ -38,6 +38,7 @@ library
                      , Codec.Soten.Types
                      , Codec.Soten.Util
   build-depends:       base >=4.8 && <4.9
+                     , binary
                      , bytestring
                      , cereal
                      , containers

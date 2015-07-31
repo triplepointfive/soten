@@ -5,8 +5,8 @@ module Codec.Soten.Parser.StlParser (
 ) where
 
 import           Control.Lens ((&), (%~), (.~))
-import qualified Data.ByteString as BS
-import           Data.Serialize
+import qualified Data.ByteString.Lazy as BS
+import           Data.Serialize (decodeLazy)
 import qualified Data.Vector as V
 import           Linear (V3(..))
 
@@ -57,7 +57,7 @@ parseBinary content =
 
 -- | Converts 50 bytes of binary file into the facet.
 parseToken :: BS.ByteString -> Facet
-parseToken token = case decode token of
+parseToken token = case decodeLazy token of
     Left msg -> throw $ DeadlyImporterError msg
     Right facet -> facet
 

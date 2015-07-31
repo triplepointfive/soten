@@ -6,13 +6,14 @@ module Codec.Soten.Importer.StlImporter (
 import           Control.Monad
                  ( liftM2
                  )
-import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BS
 import           Data.Maybe
                  ( isJust
                  , fromJust
                  )
 import qualified Data.Vector as V
 
+import           Data.Binary.Get (runGet, getWord32le)
 import           Control.Lens ((&), (^.), (.~))
 import           Linear
                  ( V3(..)
@@ -147,9 +148,7 @@ isBinary fileName = do
     if BS.length content < 84
         then return Nothing
         else
-            let [w1, w2, w3, w4] = BS.unpack (BS.take 4 (BS.drop 80 content))
-                facetsCount = w1 + 255 * (w2 + 255 * (w3 + 255 * w4))
-            in
-            if BS.length content ==  84 + fromIntegral facetsCount * 50
+            let facetsCount = runGet getWord32le $ BS.take 4 (BS.drop 80 content)
+              in if BS.length content ==  84 + fromIntegral facetsCount * 50
                 then return (Just content)
                 else return Nothing
