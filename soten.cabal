@@ -22,6 +22,7 @@ library
                      , Codec.Soten.Importer.XglImporter
                      , Codec.Soten.Internal.ImporterRegistry
                      , Codec.Soten.PostProcess.FindInvalidData
+                     , Codec.Soten.PostProcess.FixInfacingNormals
                      , Codec.Soten.Scene.Anim
                      , Codec.Soten.Scene.Camera
                      , Codec.Soten.Scene.Light
