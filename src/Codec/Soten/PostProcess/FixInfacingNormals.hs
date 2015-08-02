@@ -19,7 +19,7 @@ apply scene = scene & sceneMeshes %~ V.map processMesh
 processMesh :: Mesh -> Mesh
 processMesh mesh
     -- Nothing to do if there are no model normals.
-    | hasNormals mesh               = mesh
+    | not (hasNormals mesh)         = mesh
     -- The boxes are overlapping.
     | (d0x > 0) /= (d1x > 0)        = mesh
     | (d0y > 0) /= (d1y > 0)        = mesh
@@ -55,9 +55,12 @@ minMaxVec = V.foldl minMaxVecIter
 
 -- | Inverts normals of a mesh.
 invertNormals :: Mesh -> Mesh
-invertNormals = undefined
+invertNormals mesh = mesh & meshNormals %~ V.map (*(-1))
 
--- | Inverts the order of a half of face indices.
+-- | Reverses the order of indices for each face.
 flipFaces :: Mesh -> Mesh
-flipFaces = undefined
+flipFaces mesh = mesh & meshFaces %~ V.map reverseIndices
+  where
+    reverseIndices :: Face -> Face
+    reverseIndices face = face & faceIndices %~ V.reverse
 
