@@ -1,5 +1,5 @@
 -- | Implementation of the post processing step to invert
--- all normals in meshes with infacing normals
+-- all normals in meshes with infacing normals.
 module Codec.Soten.PostProcess.FixInfacingNormals (
     apply
 ) where

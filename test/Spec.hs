@@ -11,11 +11,13 @@ import Codec.Soten.Util
 
 import Codec.Soten.Parser.XglParserTest
 import Codec.Soten.Importer.XglImporterTest
+import Codec.Soten.PostProcess.FixInfacingNormalsTest
 
 main :: IO ()
 main = hspec $ do
   xglParserTest
   xglImporterTest
+  fixInfacingNormalsTest
 
   describe "Importer" $ do
     context "Errors" $ do
