@@ -23,6 +23,7 @@ library
                        Codec.Soten.Internal.ImporterRegistry,
                        Codec.Soten.PostProcess.FindInvalidData,
                        Codec.Soten.PostProcess.FixInfacingNormals,
+                       Codec.Soten.PostProcess.GenNormals,
                        Codec.Soten.Scene.Anim,
                        Codec.Soten.Scene.Camera,
                        Codec.Soten.Scene.Light,
