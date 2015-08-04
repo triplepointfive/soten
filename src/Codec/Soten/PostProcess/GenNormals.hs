@@ -6,7 +6,7 @@ module Codec.Soten.PostProcess.GenNormals (
 
 import           Control.Lens ((&), (^.), (%~), (.~))
 import qualified Data.Vector as V
-import           Linear (V3(..), normalize)
+import           Linear (V3(..), normalize, cross)
 
 import           Codec.Soten.Scene
 import           Codec.Soten.Scene.Mesh
@@ -45,7 +45,7 @@ genMeshFaceNormals mesh
         vecNaN = V3 getNaN getNaN getNaN
 
     calcNormals :: Int -> Int -> Int -> V3 Float
-    calcNormals i1 i2 i3 = normalize $ (v2 - v1) * (v3 - v1)
+    calcNormals i1 i2 i3 = normalize $ (v2 - v1) `cross` (v3 - v1)
       where
         v1 = (mesh ^. meshVertices) V.! i1
         v2 = (mesh ^. meshVertices) V.! i2
