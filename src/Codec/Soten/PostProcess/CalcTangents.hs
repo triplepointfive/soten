@@ -6,7 +6,7 @@ module Codec.Soten.PostProcess.CalcTangents (
 
 import           Control.Lens ((&), (^.), (%~), (.~))
 import qualified Data.Vector as V
-import           Linear (V3(..))
+import           Linear (V3(..), normalize, cross)
 
 import           Codec.Soten.Scene
 import           Codec.Soten.Scene.Mesh
@@ -34,6 +34,7 @@ processMesh mesh
       && PrimitivePolygone `V.notElem` (mesh ^. meshPrimitiveTypes) = mesh
     -- Mesh must have normals.
     | not (hasNormals mesh) = mesh
+    | otherwise =  undefined
   where
     meshPos = mesh ^. meshVertices
     meshNorm = mesh ^. meshNormals
@@ -44,15 +45,15 @@ processMesh mesh
         | numIndices < 3 = ( V.replicate numIndices vecNaN
                            , V.replicate numIndices vecNaN
                            )
-        | otherwise      =
+        | otherwise      = tuplesToTuple $ V.map vertexTangents indices
       where
         numIndices = V.length indices
         p0 = indices V.! 0
         p1 = indices V.! 1
         p2 = indices V.! 2
         -- Position differences p1->p2 and p1->p3.
-        (V3 vx vy vz)  = (meshPos V! p1) - (meshPos V! p0)
-        (V3 wx wy wz)  = (meshPos V! p2) - (meshPos V! p0)
+        (V3 vx vy vz)  = (meshPos V.! p1) - (meshPos V.! p0)
+        (V3 wx wy wz)  = (meshPos V.! p2) - (meshPos V.! p0)
         -- Texture offset p1->p2 and p1->p3.
         (V3 sx sy _) = (meshTex V.! p1) - (meshTex V.! p0)
         (V3 tx ty _) = (meshTex V.! p2) - (meshTex V.! p0)
@@ -72,4 +73,27 @@ processMesh mesh
             (wy * sx - vy * tx)
             (wz * sx - vz * tx)
 
+        vertexTangents :: Int -> (V3 Float, V3 Float)
+        vertexTangents idx
+            -- Reconstruct tangent/bitangent according to normal and
+            -- bitangent/tangent when it's infinite or NaN.
+            | (validVector localTangent) && not (validVector localBitangent) =
+                (localTangent, localTangent `cross` norm)
+            | (validVector localBitangent) && not (validVector localTangent) =
+                (norm `cross` localBitangent, localBitangent)
+            | otherwise = (localTangent, localBitangent)
+          where
+            norm = meshNorm V.! idx
+            -- Project tangent and bitangent into the plane formed by the
+            -- vertex' normal.
+            localTangent = normalize $ tangent -
+                (norm `cross` (tangent `cross` norm))
+            localBitangent = normalize $ bitangent -
+                (norm `cross` (bitangent `cross` norm))
 
+-- Converts a vector of tuples to a tuple of vectors.
+tuplesToTuple :: V.Vector (a, b) -> (V.Vector a, V.Vector b)
+tuplesToTuple = undefined
+
+validVector :: V3 Float -> Bool
+validVector v = v == v
