@@ -21,6 +21,7 @@ library
                        Codec.Soten.Importer.StlImporter,
                        Codec.Soten.Importer.XglImporter,
                        Codec.Soten.Internal.ImporterRegistry,
+                       Codec.Soten.PostProcess.CalcTangents, 
                        Codec.Soten.PostProcess.FindInvalidData,
                        Codec.Soten.PostProcess.FixInfacingNormals,
                        Codec.Soten.PostProcess.GenNormals,

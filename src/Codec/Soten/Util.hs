@@ -11,6 +11,8 @@ module Codec.Soten.Util (
   , parseVector3
   , parseVector2
   , squareLength
+  , degToRad
+  , radToDeg
 ) where
 
 import           Control.Exception (IOException, try, Exception, throw)
@@ -30,6 +32,9 @@ data CheckType
 
 hasExtention :: Foldable t => FilePath -> t String -> Bool
 hasExtention file = elem (map toLower (takeExtension file))
+
+degToRad x = x * 0.0174532925
+radToDeg x = x * 57.2957795
 
 data DeadlyImporterError = DeadlyImporterError String
     deriving (Show, Typeable)

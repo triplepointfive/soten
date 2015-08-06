@@ -23,7 +23,7 @@ apply scene = scene & sceneMeshes %~ V.map genMeshFaceNormals
 genMeshFaceNormals :: Mesh -> Mesh
 genMeshFaceNormals mesh
     | hasNormals mesh = mesh
-    -- | Mesh consists of points and lines only.
+    -- Mesh consists of points and lines only.
     | PrimitiveTriangle `V.notElem` (mesh ^. meshPrimitiveTypes)
       && PrimitivePolygone `V.notElem` (mesh ^. meshPrimitiveTypes) = mesh
     | otherwise = mesh & meshNormals .~ calculatedNormals
