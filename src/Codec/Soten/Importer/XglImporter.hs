@@ -136,7 +136,7 @@ transformToScene :: Model -> Scene
 transformToScene Model{..} =
     newScene
         & sceneMaterials .~ V.fromList (transformMaterials materials)
-        -- & sceneMeshes    .~ V.singleton mesh
+        & sceneMeshes    .~ V.fromList (transformMeshes meshMaterials)
         -- & sceneRootNode  .~ Just node
         & sceneLights .~ V.fromList (transformLights modelLightingTags)
   where
@@ -211,4 +211,3 @@ transformMeshes = map sceneMesh
                 [ vertexPosition v1
                 , vertexPosition v2
                 , vertexPosition v3 ])
-
