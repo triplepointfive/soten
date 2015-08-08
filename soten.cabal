@@ -13,6 +13,7 @@ cabal-version:       >=1.10
 library
   exposed-modules:     Codec.Soten,
                        Codec.Soten.BaseImporter,
+                       Codec.Soten.Data.Md2Data, 
                        Codec.Soten.Data.ObjData,
                        Codec.Soten.Data.StlData,
                        Codec.Soten.Data.XglData,
