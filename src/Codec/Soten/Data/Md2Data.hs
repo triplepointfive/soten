@@ -1,4 +1,6 @@
-{-# LANGUAGE DeriveGeneric   #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DeriveGeneric #-}
 module Codec.Soten.Data.Md2Data where
 
 import           GHC.Generics
@@ -46,25 +48,30 @@ data Header
       -- | Offset end of file.
     , offsetEnd    :: !Int32
     } deriving (Show, Eq, Generic)
-
 instance Serialize Header
+sizeOfHeader = 68
 
 -- | The vector, composed of three floating coordinates.
 type Vector = V3 Float
+sizeOfVector = 12
 
 -- | The texture name associated to the model.
 data Skin
     = Skin
     { -- | Texture file name.
       texture :: ![Char] -- 64
-    } deriving (Show, Eq)
+    } deriving (Show, Eq, Generic)
+instance Serialize Skin
+sizeOfSkin = 64
 
 -- | Texture coordinates.
 data TexCoord
     = TexCoord
     { s :: !Int16
     , t :: !Int16
-    } deriving (Show, Eq)
+    } deriving (Show, Eq, Generic)
+instance Serialize TexCoord
+sizeOfTexCoord = 4
 
 -- | Triangle info.
 data Triangle
@@ -73,7 +80,9 @@ data Triangle
       vertex :: ![Int16] -- 3
       -- | Tex coord indices.
     , st     :: ![Int16] -- 3
-    } deriving (Show, Eq)
+    } deriving (Show, Eq, Generic)
+instance Serialize Triangle
+sizeOfTriangle = 8
 
 -- | Composed of "compressed" 3D coordinates and a normal vector index.
 data Vertex
@@ -82,13 +91,21 @@ data Vertex
       v           :: ![Char]
       -- | Normal vector index.
     , normalIndex :: !Char
-    } deriving (Show, Eq)
+    } deriving (Show, Eq, Generic)
+instance Serialize Vertex
+sizeOfVertex = 4
 
 -- | Holding all model's data.
 data Model
     = Model
-    { header :: !Header
-    } deriving (Show, Eq)
+    { header    :: !Header
+    , skins     :: ![Skin]
+    , texCoords :: ![TexCoord]
+    , triangles :: ![Triangle]
+    , frames    :: ![Frame]
+    , glCmds    :: ![Int32]
+    } deriving (Show, Eq, Generic)
+instance Serialize Model
 
 -- | Have specific informations for itself and the vertex list of the frame.
 data Frame
@@ -101,5 +118,7 @@ data Frame
     , name      :: ![Char] -- 16
       -- | List of frame's vertices.
     , verts     :: ![Vertex]
-    } deriving (Show, Eq)
+    } deriving (Show, Eq, Generic)
+instance Serialize Frame
+sizeOfFrame = 40
 
