@@ -128,19 +128,23 @@ sizeOfTexCoord = 4
 data Triangle
     = Triangle
     { -- | Vertex indices of a triangle.
-      vertex :: ![Int16] -- 3
+      vertex :: ![Int16]
       -- | Tex coord indices.
-    , st     :: ![Int16] -- 3
+    , st     :: ![Int16]
     } deriving (Show, Eq, Generic)
 
 instance Serialize Triangle where
     get = do
-        _vertex <- getListOf getInt16le
-        _st     <- getListOf getInt16le
-        return $ Triangle _vertex _st
+        v1  <- getInt16le
+        v2  <- getInt16le
+        v3  <- getInt16le
+        st1 <- getInt16le
+        st2 <- getInt16le
+        st3 <- getInt16le
+        return $ Triangle [v1, v2, v3] [st1, st2, st3]
 
-sizeOfTriangle :: Int32
-sizeOfTriangle = 8
+sizeOfTriangle :: Int
+sizeOfTriangle = 12
 
 -- | Composed of "compressed" 3D coordinates and a normal vector index.
 data Vertex

@@ -37,7 +37,8 @@ loadWithHeader header@Header{..} fileContent = Model
         BS.drop (fromIntegral offsetSkins) fileContent
     , texCoords = loadTexCoord $ BS.take (sizeOfTexCoord * fromIntegral numSt) $
         BS.drop (fromIntegral offsetSt) fileContent
-    , triangles = [] -- decode $ BS.take (sizeOfTriangle * numTris) $ BS.drop offsetTris
+    , triangles = loadTriangle $ BS.take (sizeOfTriangle * fromIntegral numTris)
+        $ BS.drop (fromIntegral offsetTris) fileContent
     , frames    = [] -- decode $ BS.take (sizeOfFrame * numFrames) $ BS.drop offsetFrames
     , glCmds    = [] -- ![Int32]
     }
@@ -58,3 +59,13 @@ loadTexCoord string
             "Failed to parse MD2.TexCoord: " ++ message
   where
     (x, xs) = BS.splitAt sizeOfTexCoord string
+
+loadTriangle :: BS.ByteString -> [Triangle]
+loadTriangle string
+    | BS.null string = []
+    | otherwise      = case decode x of
+        Right texCoord -> texCoord : loadTriangle xs
+        Left message   -> throw $ DeadlyImporterError $
+            "Failed to parse MD2.Triangle: " ++ message
+  where
+    (x, xs) = BS.splitAt sizeOfTriangle string
