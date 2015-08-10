@@ -48,20 +48,64 @@ data Header
       -- | Offset end of file.
     , offsetEnd    :: !Int32
     } deriving (Show, Eq, Generic)
-instance Serialize Header
+
+instance Serialize Header where
+    get = do
+        _ident        <- getInt32le
+        _version      <- getInt32le
+        _skinWidth    <- getInt32le
+        _skinHeight   <- getInt32le
+        _frameSize    <- getInt32le
+        _numSkins     <- getInt32le
+        _numVertices  <- getInt32le
+        _numSt        <- getInt32le
+        _numTris      <- getInt32le
+        _numGLCmds    <- getInt32le
+        _numFrames    <- getInt32le
+        _offsetSkins  <- getInt32le
+        _offsetSt     <- getInt32le
+        _offsetTris   <- getInt32le
+        _offsetFrames <- getInt32le
+        _offsetGLCmds <- getInt32le
+        _offsetEnd    <- getInt32le
+
+        return $ Header
+            { ident        = _ident
+            , version      = _version
+            , skinWidth    = _skinWidth
+            , skinHeight   = _skinHeight
+            , frameSize    = _frameSize
+            , numSkins     = _numSkins
+            , numVertices  = _numVertices
+            , numSt        = _numSt
+            , numTris      = _numTris
+            , numGLCmds    = _numGLCmds
+            , numFrames    = _numFrames
+            , offsetSkins  = _offsetSkins
+            , offsetSt     = _offsetSt
+            , offsetTris   = _offsetTris
+            , offsetFrames = _offsetFrames
+            , offsetGLCmds = _offsetGLCmds
+            , offsetEnd    = _offsetEnd
+            }
+
+sizeOfHeader :: Int
 sizeOfHeader = 68
 
 -- | The vector, composed of three floating coordinates.
 type Vector = V3 Float
+
+sizeOfVector :: Int32
 sizeOfVector = 12
 
 -- | The texture name associated to the model.
 data Skin
     = Skin
     { -- | Texture file name.
-      texture :: ![Char] -- 64
-    } deriving (Show, Eq, Generic)
-instance Serialize Skin
+      texture :: ![Char]
+    } deriving (Show, Eq)
+
+sizeOfSkin :: Int
 sizeOfSkin = 64
 
 -- | Texture coordinates.
@@ -70,7 +114,14 @@ data TexCoord
     { s :: !Int16
     , t :: !Int16
     } deriving (Show, Eq, Generic)
-instance Serialize TexCoord
+
+instance Serialize TexCoord where
+    get = do
+        _s <- getInt16le
+        _t <- getInt16le
+        return $ TexCoord _s _t
+
+sizeOfTexCoord :: Int32
 sizeOfTexCoord = 4
 
 -- | Triangle info.
@@ -81,7 +132,14 @@ data Triangle
       -- | Tex coord indices.
     , st     :: ![Int16] -- 3
     } deriving (Show, Eq, Generic)
-instance Serialize Triangle
+
+instance Serialize Triangle where
+    get = do
+        _vertex <- getListOf getInt16le
+        _st     <- getListOf getInt16le
+        return $ Triangle _vertex _st
+
+sizeOfTriangle :: Int32
 sizeOfTriangle = 8
 
 -- | Composed of "compressed" 3D coordinates and a normal vector index.
@@ -93,19 +151,9 @@ data Vertex
     , normalIndex :: !Char
     } deriving (Show, Eq, Generic)
 instance Serialize Vertex
-sizeOfVertex = 4
 
--- | Holding all model's data.
-data Model
-    = Model
-    { header    :: !Header
-    , skins     :: ![Skin]
-    , texCoords :: ![TexCoord]
-    , triangles :: ![Triangle]
-    , frames    :: ![Frame]
-    , glCmds    :: ![Int32]
-    } deriving (Show, Eq, Generic)
-instance Serialize Model
+sizeOfVertex :: Int32
+sizeOfVertex = 4
 
 -- | Have specific informations for itself and the vertex list of the frame.
 data Frame
@@ -120,5 +168,18 @@ data Frame
     , verts     :: ![Vertex]
     } deriving (Show, Eq, Generic)
 instance Serialize Frame
+
+sizeOfFrame :: Int32
 sizeOfFrame = 40
+
+-- | Holding all model's data.
+data Model
+    = Model
+    { header    :: !Header
+    , skins     :: ![Skin]
+    , texCoords :: ![TexCoord]
+    , triangles :: ![Triangle]
+    , frames    :: ![Frame]
+    , glCmds    :: ![Int32]
+    } deriving (Show, Eq)
 

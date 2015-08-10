@@ -136,7 +136,7 @@ transformToScene :: Model -> Scene
 transformToScene Model{..} =
     newScene
         & sceneMaterials .~ V.fromList (transformMaterials materials)
-        & sceneMeshes    .~ V.fromList (transformMeshes meshMaterials)
+        -- & sceneMeshes    .~ V.fromList (transformMeshes meshMaterials)
         -- & sceneRootNode  .~ Just node
         & sceneLights .~ V.fromList (transformLights modelLightingTags)
   where
