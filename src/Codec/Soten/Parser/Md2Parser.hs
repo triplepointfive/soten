@@ -11,13 +11,12 @@ import           Data.ByteString.Char8
 import           Data.Serialize
                  ( decode
                  )
+import           Linear (V3(..))
 
 import           Codec.Soten.Data.Md2Data
-import           Codec.Soten.Types (Color3D)
 import           Codec.Soten.Util
                  ( DeadlyImporterError(..)
                  , throw
-                 , parseVector3
                  )
 
 -- | Parses a file content into model object.
@@ -34,8 +33,10 @@ validateHeader header = if (ident header /= 844121161) || (version header /= 8)
 loadWithHeader :: Header -> BS.ByteString -> Model
 loadWithHeader header@Header{..} fileContent = Model
     { header    = header
-    , skins     = loadSkins $ BS.take (sizeOfSkin * fromIntegral numSkins) $ BS.drop (fromIntegral offsetSkins) fileContent
-    , texCoords = [] -- decode $ BS.take (sizeOfTexCoord * numSt) $ BS.drop offsetSt
+    , skins     = loadSkins $ BS.take (sizeOfSkin * fromIntegral numSkins) $
+        BS.drop (fromIntegral offsetSkins) fileContent
+    , texCoords = loadTexCoord $ BS.take (sizeOfTexCoord * fromIntegral numSt) $
+        BS.drop (fromIntegral offsetSt) fileContent
     , triangles = [] -- decode $ BS.take (sizeOfTriangle * numTris) $ BS.drop offsetTris
     , frames    = [] -- decode $ BS.take (sizeOfFrame * numFrames) $ BS.drop offsetFrames
     , glCmds    = [] -- ![Int32]
@@ -48,3 +49,12 @@ loadSkins string
   where
     (x, xs) = BS.splitAt sizeOfSkin string
 
+loadTexCoord :: BS.ByteString -> [TexCoord]
+loadTexCoord string
+    | BS.null string = []
+    | otherwise      = case decode x of
+        Right texCoord -> texCoord : loadTexCoord xs
+        Left message   -> throw $ DeadlyImporterError $
+            "Failed to parse MD2.TexCoord: " ++ message
+  where
+    (x, xs) = BS.splitAt sizeOfTexCoord string

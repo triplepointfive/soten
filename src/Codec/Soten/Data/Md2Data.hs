@@ -121,7 +121,7 @@ instance Serialize TexCoord where
         _t <- getInt16le
         return $ TexCoord _s _t
 
-sizeOfTexCoord :: Int32
+sizeOfTexCoord :: Int
 sizeOfTexCoord = 4
 
 -- | Triangle info.
