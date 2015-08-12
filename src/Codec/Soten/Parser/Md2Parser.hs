@@ -4,14 +4,26 @@ module Codec.Soten.Parser.Md2Parser (
     load
 ) where
 
+import           Data.Int
+                 ( Int32
+                 )
+import           Data.Word
+                 ( Word64
+                 )
+
 import qualified Data.ByteString as BS
 import           Data.ByteString.Char8
                  ( unpack
                  )
 import           Data.Serialize
                  ( decode
+                 , encode
+                 , getInt32le
                  )
-import           Linear (V3(..))
+import           Data.Serialize.Get
+                 ( getListOf
+                 , runGet
+                 )
 
 import           Codec.Soten.Data.Md2Data
 import           Codec.Soten.Util
@@ -40,7 +52,8 @@ loadWithHeader header@Header{..} fileContent = Model
     , triangles = loadTriangle $ BS.take (sizeOfTriangle * fromIntegral numTris)
         $ BS.drop (fromIntegral offsetTris) fileContent
     , frames    = [] -- decode $ BS.take (sizeOfFrame * numFrames) $ BS.drop offsetFrames
-    , glCmds    = [] -- ![Int32]
+    , glCmds    = loadGLCommands numGLCmds $
+        BS.drop (fromIntegral offsetGLCmds) fileContent
     }
 
 loadSkins :: BS.ByteString -> [Skin]
@@ -69,3 +82,15 @@ loadTriangle string
             "Failed to parse MD2.Triangle: " ++ message
   where
     (x, xs) = BS.splitAt sizeOfTriangle string
+
+loadGLCommands :: Int32 -> BS.ByteString -> [Int32]
+loadGLCommands count string = case runGet (getListOf getInt32le) parseLine of
+    Right commands -> commands
+    Left message -> throw $ DeadlyImporterError $
+        "Failed to parse MD2.GLCommand: " ++ message
+  where
+    parseLine = BS.concat
+        [ countPrefix
+        , BS.take (sizeOfGLCommand * fromIntegral count) string
+        ]
+    countPrefix = encode (fromIntegral count :: Word64)

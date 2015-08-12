@@ -187,3 +187,5 @@ data Model
     , glCmds    :: ![Int32]
     } deriving (Show, Eq)
 
+sizeOfGLCommand :: Int
+sizeOfGLCommand = 4
