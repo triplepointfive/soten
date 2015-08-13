@@ -19,6 +19,7 @@ import           Data.Serialize
                  ( decode
                  , encode
                  , getInt32le
+                 , get
                  )
 import           Data.Serialize.Get
                  ( getListOf
@@ -51,10 +52,14 @@ loadWithHeader header@Header{..} fileContent = Model
         BS.drop (fromIntegral offsetSt) fileContent
     , triangles = loadTriangle $ BS.take (sizeOfTriangle * fromIntegral numTris)
         $ BS.drop (fromIntegral offsetTris) fileContent
-    , frames    = [] -- decode $ BS.take (sizeOfFrame * numFrames) $ BS.drop offsetFrames
+    , frames    = loadFrames numVertices $
+        BS.take (frameSize * fromIntegral numFrames) $
+        BS.drop (fromIntegral offsetFrames) fileContent
     , glCmds    = loadGLCommands numGLCmds $
         BS.drop (fromIntegral offsetGLCmds) fileContent
     }
+  where
+    frameSize = (sizeOfFrame + fromIntegral (numVertices * sizeOfVertex))
 
 loadSkins :: BS.ByteString -> [Skin]
 loadSkins string
@@ -94,3 +99,26 @@ loadGLCommands count string = case runGet (getListOf getInt32le) parseLine of
         , BS.take (sizeOfGLCommand * fromIntegral count) string
         ]
     countPrefix = encode (fromIntegral count :: Word64)
+
+loadFrames :: Int32 -> BS.ByteString -> [Frame]
+loadFrames verticesCount string
+    | BS.null string = []
+    | otherwise      = case decode x of
+        Right frame -> addVertices frame : loadFrames verticesCount xs
+        Left message   -> throw $ DeadlyImporterError $
+            "Failed to parse MD2.Frame: " ++ message
+  where
+    (x, xs) = BS.splitAt (sizeOfFrame + fromIntegral (verticesCount * sizeOfVertex)) string
+
+    addVertices :: Frame -> Frame
+    addVertices frame =
+      case runGet (getListOf get) verticesString of
+        Right vertices -> frame { verts = vertices }
+        Left message -> throw $ DeadlyImporterError $
+            "Failed to parse MD2.Frame.Vertices: " ++ message
+      where
+        verticesString = BS.concat
+            [ encode (fromIntegral verticesCount :: Word64)
+            , BS.drop sizeOfFrame x
+            ]
+

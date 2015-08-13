@@ -3,9 +3,18 @@
 {-# LANGUAGE DeriveGeneric #-}
 module Codec.Soten.Data.Md2Data where
 
+import           Control.Monad
+                 ( replicateM
+                 )
 import           GHC.Generics
 import           Data.Int
+import           Data.Word
+                 ( Word8
+                 )
 
+import           Data.ByteString.Internal
+                 ( w2c
+                 )
 import           Linear (V3(..))
 
 import           Data.Serialize
@@ -95,6 +104,13 @@ sizeOfHeader = 68
 -- | The vector, composed of three floating coordinates.
 type Vector = V3 Float
 
+getVector :: Get Vector
+getVector = do
+    x <- getFloat32le
+    y <- getFloat32le
+    z <- getFloat32le
+    return $ V3 x y z
+
 sizeOfVector :: Int32
 sizeOfVector = 12
 
@@ -150,11 +166,18 @@ sizeOfTriangle = 12
 data Vertex
     = Vertex
     { -- | Position.
-      v           :: ![Char]
+      v           :: ![Word8]
       -- | Normal vector index.
-    , normalIndex :: !Char
+    , normalIndex :: !Word8
     } deriving (Show, Eq, Generic)
-instance Serialize Vertex
+
+instance Serialize Vertex where
+    get = do
+        x  <- getWord8
+        y  <- getWord8
+        z  <- getWord8
+        ni <- getWord8
+        return $ Vertex [x, y, z] ni
 
 sizeOfVertex :: Int32
 sizeOfVertex = 4
@@ -167,13 +190,19 @@ data Frame
       -- | Translation vector.
     , translate :: !Vector
       -- | Frame name.
-    , name      :: ![Char] -- 16
+    , name      :: ![Char]
       -- | List of frame's vertices.
     , verts     :: ![Vertex]
     } deriving (Show, Eq, Generic)
-instance Serialize Frame
 
-sizeOfFrame :: Int32
+instance Serialize Frame where
+    get = do
+        _scale <- getVector
+        _translate <- getVector
+        wordName <- replicateM 16 getWord8
+        return $ Frame _scale _translate (map w2c $ filter (/=0) wordName) []
+
+sizeOfFrame :: Int
 sizeOfFrame = 40
 
 -- | Holding all model's data.
