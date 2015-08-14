@@ -16,8 +16,9 @@ import           Data.ByteString.Internal
                  ( w2c
                  )
 import           Linear (V3(..))
-
 import           Data.Serialize
+
+import           Data.Serialize.Int
 
 -- | The header is a structure which comes at the beginning of the file.
 data Header

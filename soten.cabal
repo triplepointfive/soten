@@ -41,7 +41,9 @@ library
                        Codec.Soten.PostProcess,
                        Codec.Soten.Scene,
                        Codec.Soten.Types,
-                       Codec.Soten.Util
+                       Codec.Soten.Util,
+
+                       Data.Serialize.Int 
   build-depends:       base >=4.8 && <4.9,
                        binary,
                        bytestring,

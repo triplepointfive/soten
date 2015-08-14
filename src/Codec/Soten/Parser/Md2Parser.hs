@@ -15,10 +15,10 @@ import qualified Data.ByteString as BS
 import           Data.ByteString.Char8
                  ( unpack
                  )
+import           Data.Serialize.Int
 import           Data.Serialize
                  ( decode
                  , encode
-                 , getInt32le
                  , get
                  )
 import           Data.Serialize.Get
@@ -38,6 +38,7 @@ load fileContent = case decode (BS.take sizeOfHeader fileContent) of
     Right header -> loadWithHeader (validateHeader header) fileContent
     Left message -> throw $ DeadlyImporterError message
 
+-- TODO: Validate offsetEnd with sizes * num + offset of all structures
 validateHeader :: Header -> Header
 validateHeader header = if (ident header /= 844121161) || (version header /= 8)
     then throw $ DeadlyImporterError "Bad version or identifier"

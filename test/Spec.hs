@@ -9,14 +9,16 @@ import Codec.Soten.Importer
 import Codec.Soten.Importer.StlImporter
 import Codec.Soten.Util
 
-import Codec.Soten.Parser.XglParserTest
 import Codec.Soten.Importer.XglImporterTest
+import Codec.Soten.Parser.Md2ParserTest
+import Codec.Soten.Parser.XglParserTest
 import Codec.Soten.PostProcess.FixInfacingNormalsTest
 import Codec.Soten.PostProcess.GenNormalsTest
 
 main :: IO ()
 main = hspec $ do
   xglParserTest
+  md2ParserTest
   xglImporterTest
   fixInfacingNormalsTest
   genNormalsTest
