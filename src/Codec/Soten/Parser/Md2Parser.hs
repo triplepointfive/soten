@@ -44,6 +44,7 @@ validateHeader header = if (ident header /= 844121161) || (version header /= 8)
     then throw $ DeadlyImporterError "Bad version or identifier"
     else header
 
+-- | Loads a model with header data.
 loadWithHeader :: Header -> BS.ByteString -> Model
 loadWithHeader header@Header{..} fileContent = Model
     { header    = header
@@ -62,6 +63,7 @@ loadWithHeader header@Header{..} fileContent = Model
   where
     frameSize = (sizeOfFrame + fromIntegral (numVertices * sizeOfVertex))
 
+-- | Loads models skins.
 loadSkins :: BS.ByteString -> [Skin]
 loadSkins string
     | BS.null string = []
@@ -69,6 +71,7 @@ loadSkins string
   where
     (x, xs) = BS.splitAt sizeOfSkin string
 
+-- | Loads texture coordinates.
 loadTexCoord :: BS.ByteString -> [TexCoord]
 loadTexCoord string
     | BS.null string = []
@@ -79,6 +82,7 @@ loadTexCoord string
   where
     (x, xs) = BS.splitAt sizeOfTexCoord string
 
+-- | Loads faces.
 loadTriangle :: BS.ByteString -> [Triangle]
 loadTriangle string
     | BS.null string = []
@@ -89,6 +93,7 @@ loadTriangle string
   where
     (x, xs) = BS.splitAt sizeOfTriangle string
 
+-- | Loads gl commands.
 loadGLCommands :: Int32 -> BS.ByteString -> [Int32]
 loadGLCommands count string = case runGet (getListOf getInt32le) parseLine of
     Right commands -> commands
@@ -101,6 +106,7 @@ loadGLCommands count string = case runGet (getListOf getInt32le) parseLine of
         ]
     countPrefix = encode (fromIntegral count :: Word64)
 
+-- | Loads frames.
 loadFrames :: Int32 -> BS.ByteString -> [Frame]
 loadFrames verticesCount string
     | BS.null string = []

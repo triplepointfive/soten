@@ -17,3 +17,8 @@ md2ParserTest = do
       let h = header $ load file
       it "Version" $ do
         (version h) `shouldBe` 8
+      it "Ident" $ do
+        (ident h) `shouldBe` 844121161
+    context "Skins" $ do
+      it "Name" $ do
+        (texture $ head $ skins $ load file) `shouldBe` "phoenix.pcx"
