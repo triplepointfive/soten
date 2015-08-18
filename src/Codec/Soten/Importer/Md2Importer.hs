@@ -1,7 +1,27 @@
 module Codec.Soten.Importer.Md2Importer (
+    Md2Importer(..)
 ) where
 
 import           Linear (V3(..))
+
+import           Codec.Soten.BaseImporter
+                 ( BaseImporter(..)
+                 , searchFileHeaderForToken
+                 )
+
+data Md2Importer =
+    Md2Importer
+    deriving Show
+
+instance BaseImporter Md2Importer where
+  canImport _ filePath CheckExtension = return $ hasExtention filePath [".md2"]
+  canImport p filePath CheckHeader    = undefined
+  readModel _ = internalReadFile
+
+-- | Reads file content and parsers it into the 'Scene'. Returns error messages
+-- as 'String's.
+internalReadFile :: FilePath -> IO (Either String Scene)
+internalReadFile = undefined
 
 normals :: [V3 Float]
 normals =
