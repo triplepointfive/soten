@@ -8,6 +8,21 @@ import           Codec.Soten.BaseImporter
                  ( BaseImporter(..)
                  , searchFileHeaderForToken
                  )
+import           Codec.Soten.Scene
+                 ( Scene(..)
+                 , sceneMeshes
+                 , sceneMaterials
+                 , sceneRootNode
+                 , newScene
+                 , nodeMeshes
+                 , newNode
+                 )
+import           Codec.Soten.Util
+                 ( CheckType(..)
+                 , DeadlyImporterError(..)
+                 , throw
+                 , hasExtention
+                 )
 
 data Md2Importer =
     Md2Importer
@@ -15,7 +30,8 @@ data Md2Importer =
 
 instance BaseImporter Md2Importer where
   canImport _ filePath CheckExtension = return $ hasExtention filePath [".md2"]
-  canImport p filePath CheckHeader    = undefined
+  canImport _ filePath CheckHeader    =
+      searchFileHeaderForToken filePath ["IDP2"]
   readModel _ = internalReadFile
 
 -- | Reads file content and parsers it into the 'Scene'. Returns error messages

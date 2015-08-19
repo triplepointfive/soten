@@ -35,5 +35,5 @@ searchFileHeaderForToken filePath tokens =
     failSearch _ = return False
 
     searchHeader :: B.ByteString -> IO Bool
-    searchHeader context = return $ any (`B.isInfixOf ` context) listTokens
-      where listTokens = map B.pack tokens
+    searchHeader context = return $ any (`B.isInfixOf` context) listTokens
+      where listTokens = map (B.pack . map toLower) tokens

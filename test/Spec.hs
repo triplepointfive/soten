@@ -6,9 +6,10 @@ import Test.Hspec
 
 import Codec.Soten.BaseImporter
 import Codec.Soten.Importer
-import Codec.Soten.Importer.StlImporter
 import Codec.Soten.Util
 
+import Codec.Soten.Importer.Md2ImporterTest
+import Codec.Soten.Importer.StlImporterTest
 import Codec.Soten.Importer.XglImporterTest
 import Codec.Soten.Parser.Md2ParserTest
 import Codec.Soten.Parser.XglParserTest
@@ -19,7 +20,11 @@ main :: IO ()
 main = hspec $ do
   xglParserTest
   md2ParserTest
+
+  md2ImporterTest
+  stlImporterTest
   xglImporterTest
+
   fixInfacingNormalsTest
   genNormalsTest
 
@@ -35,18 +40,3 @@ main = hspec $ do
       it "STL" $ do
         eitherScene <- readModelFile "models/stl/block_ascii.stl"
         (isRight eitherScene) `shouldBe` True
-
-  describe "Importers" $ do
-    context "STL" $ do
-      it "Checks extension of ascii file" $ do
-        status <- canImport StlImporter "models/stl/block_ascii.stl" CheckExtension
-        status `shouldBe` True
-      it "Checks header of ascii file" $ do
-        status <- canImport StlImporter "models/stl/block_ascii.stl" CheckHeader
-        status `shouldBe` True
-      it "Checks extension of binary file" $ do
-        status <- canImport StlImporter "models/stl/block_bin.stl" CheckExtension
-        status `shouldBe` True
-      it "Checks header of binary file" $ do
-        status <- canImport StlImporter "models/stl/block_bin.stl" CheckHeader
-        status `shouldBe` True
