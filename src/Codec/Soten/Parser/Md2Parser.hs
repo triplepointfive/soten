@@ -1,7 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE RankNTypes #-}
 module Codec.Soten.Parser.Md2Parser (
-    load
+    getModel
 ) where
 
 import           Data.Int
@@ -32,6 +32,10 @@ import           Codec.Soten.Util
                  , throw
                  )
 
+-- | Gets a Model from file.
+getModel :: FilePath -> IO Model
+getModel filePath = load <$> BS.readFile filePath
+
 -- | Parses a file content into model object.
 load :: BS.ByteString -> Model
 load fileContent = case decode (BS.take sizeOfHeader fileContent) of
@@ -39,6 +43,7 @@ load fileContent = case decode (BS.take sizeOfHeader fileContent) of
     Left message -> throw $ DeadlyImporterError message
 
 -- TODO: Validate offsetEnd with sizes * num + offset of all structures
+-- | Validates the header.
 validateHeader :: Header -> Header
 validateHeader header = if (ident header /= 844121161) || (version header /= 8)
     then throw $ DeadlyImporterError "Bad version or identifier"
@@ -61,7 +66,7 @@ loadWithHeader header@Header{..} fileContent = Model
         BS.drop (fromIntegral offsetGLCmds) fileContent
     }
   where
-    frameSize = (sizeOfFrame + fromIntegral (numVertices * sizeOfVertex))
+    frameSize = sizeOfFrame + fromIntegral (numVertices * sizeOfVertex)
 
 -- | Loads models skins.
 loadSkins :: BS.ByteString -> [Skin]

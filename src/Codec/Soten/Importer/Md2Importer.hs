@@ -1,12 +1,23 @@
+-- | Defines the Md2Importer.
+{- Importer notes:
+  - Assumes model file contains a single mesh.
+-}
+{-# LANGUAGE RecordWildCards #-}
 module Codec.Soten.Importer.Md2Importer (
     Md2Importer(..)
 ) where
 
+import           Control.Lens ((&), (^.), (.~))
+import qualified Data.Vector as V
 import           Linear (V3(..))
 
 import           Codec.Soten.BaseImporter
                  ( BaseImporter(..)
                  , searchFileHeaderForToken
+                 )
+import           Codec.Soten.Data.Md2Data
+import           Codec.Soten.Parser.Md2Parser
+                 ( getModel
                  )
 import           Codec.Soten.Scene
                  ( Scene(..)
@@ -36,8 +47,17 @@ instance BaseImporter Md2Importer where
 
 -- | Reads file content and parsers it into the 'Scene'. Returns error messages
 -- as 'String's.
+-- TODO: Catch exceptions.
 internalReadFile :: FilePath -> IO (Either String Scene)
-internalReadFile = undefined
+internalReadFile filePath = (Right . transformModel) <$> getModel filePath
+
+-- | Transforms model data to Scene struct.
+transformModel :: Model -> Scene
+transformModel Model{..} = newScene
+    & sceneRootNode .~ rootNode
+  where
+    rootNode = newNode
+        & nodeMeshes .~ V.singleton 0
 
 normals :: [V3 Float]
 normals =
