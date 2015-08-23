@@ -1,142 +1,145 @@
-name:                soten
-version:             0.1.0.0
-synopsis:            3D models parser.
-description:         3D models parser.
-license:             MIT
-license-file:        LICENSE
-author:              Ilya Smelkov
-maintainer:          triplepointfive@gmail.com
-category:            Codec
-build-type:          Simple
-cabal-version:       >=1.10
+name: soten
+version: 0.1.0.0
+cabal-version: >=1.10
+build-type: Simple
+license: MIT
+license-file: LICENSE
+maintainer: triplepointfive@gmail.com
+synopsis: 3D models parser.
+description:
+    3D models parser.
+category: Codec
+author: Ilya Smelkov
+
+source-repository head
+    type: git
+    location: http://github.com/triplepointfive/soten
 
 library
-  exposed-modules:     Codec.Soten,
-                       Codec.Soten.BaseImporter,
-                       Codec.Soten.Data.Md2Data, 
-                       Codec.Soten.Data.ObjData,
-                       Codec.Soten.Data.StlData,
-                       Codec.Soten.Data.XglData,
-                       Codec.Soten.Importer,
-                       Codec.Soten.Importer.ObjImporter,
-                       Codec.Soten.Importer.StlImporter,
-                       Codec.Soten.Importer.XglImporter,
-                       Codec.Soten.Internal.ImporterRegistry,
-                       Codec.Soten.PostProcess.CalcTangents, 
-                       Codec.Soten.PostProcess.FindInvalidData,
-                       Codec.Soten.PostProcess.FixInfacingNormals,
-                       Codec.Soten.PostProcess.GenNormals,
-                       Codec.Soten.Scene.Anim,
-                       Codec.Soten.Scene.Camera,
-                       Codec.Soten.Scene.Light,
-                       Codec.Soten.Scene.Material,
-                       Codec.Soten.Scene.Mesh,
-                       Codec.Soten.Scene.MetaData,
-                       Codec.Soten.Scene.Texture,
-                       Codec.Soten.Parser.Md2Parser,
-                       Codec.Soten.Parser.ObjFileParser,
-                       Codec.Soten.Parser.ObjMtlParser,
-                       Codec.Soten.Parser.StlParser,
-                       Codec.Soten.Parser.XglParser,
-                       Codec.Soten.PostProcess,
-                       Codec.Soten.Scene,
-                       Codec.Soten.Types,
-                       Codec.Soten.Util,
-
-                       Data.Serialize.Int 
-  build-depends:       base >=4.8 && <4.9,
-                       binary,
-                       bytestring,
-                       cereal,
-                       containers,
-                       directory,
-                       filepath,
-                       text,
-                       lens,
-                       linear >= 1.19.1.3,
-                       MissingH,
-                       mtl,
-                       safe,
-                       unix,
-                       vector,
-                       hxt,
-                       zlib
-  hs-source-dirs:      src
-  default-language:    Haskell2010
-  ghc-options:         -W
-
-Test-Suite test-soten
-  type:               exitcode-stdio-1.0
-  main-is:            Spec.hs
-  build-depends:      base,
-                      hspec,
-                      binary,
-                      bytestring,
-                      cereal,
-                      containers,
-                      directory,
-                      filepath,
-                      text,
-                      lens,
-                      linear,
-                      MissingH,
-                      mtl,
-                      safe,
-                      unix,
-                      vector,
-                      hxt,
-                      zlib
-  buildable:          True
-  cpp-options:        -DTEST_MODE=true
-  hs-source-dirs:     src test
-  default-language:    Haskell2010
-  ghc-options:         -W
+    exposed-modules:
+        Codec.Soten
+        Codec.Soten.BaseImporter
+        Codec.Soten.Data.Md2Data
+        Codec.Soten.Data.ObjData
+        Codec.Soten.Data.StlData
+        Codec.Soten.Data.XglData
+        Codec.Soten.Importer
+        Codec.Soten.Importer.ObjImporter
+        Codec.Soten.Importer.StlImporter
+        Codec.Soten.Importer.XglImporter
+        Codec.Soten.Internal.ImporterRegistry
+        Codec.Soten.PostProcess.CalcTangents
+        Codec.Soten.PostProcess.FindInvalidData
+        Codec.Soten.PostProcess.FixInfacingNormals
+        Codec.Soten.PostProcess.GenNormals
+        Codec.Soten.Scene.Anim
+        Codec.Soten.Scene.Camera
+        Codec.Soten.Scene.Light
+        Codec.Soten.Scene.Material
+        Codec.Soten.Scene.Mesh
+        Codec.Soten.Scene.MetaData
+        Codec.Soten.Scene.Texture
+        Codec.Soten.Parser.Md2Parser
+        Codec.Soten.Parser.ObjFileParser
+        Codec.Soten.Parser.ObjMtlParser
+        Codec.Soten.Parser.StlParser
+        Codec.Soten.Parser.XglParser
+        Codec.Soten.PostProcess
+        Codec.Soten.Scene
+        Codec.Soten.Types
+        Codec.Soten.Util
+        Data.Serialize.Int
+    build-depends:
+        base >=4.8 && <4.9,
+        binary >=0.7.5.0 && <0.8,
+        bytestring >=0.10.6.0 && <0.11,
+        cereal >=0.4.1.1 && <0.5,
+        containers >=0.5.6.2 && <0.6,
+        directory >=1.2.2.0 && <1.3,
+        filepath >=1.4.0.0 && <1.5,
+        text >=1.2.1.3 && <1.3,
+        lens >=4.12.2 && <4.13,
+        linear >=1.19.1.3 && <1.20,
+        MissingH >=1.3.0.1 && <1.4,
+        mtl >=2.2.1 && <2.3,
+        safe >=0.3.9 && <0.4,
+        unix >=2.7.1.0 && <2.8,
+        vector >=0.11.0.0 && <0.12,
+        hxt >=9.3.1.15 && <9.4,
+        zlib >=0.6.1.1 && <0.7
+    default-language: Haskell2010
+    hs-source-dirs: src
+    ghc-options: -W
 
 executable SimpleOpenGL
-  main-is:             Main.hs 
-  other-modules:       Codec.Soten.BaseImporter,
-                       Codec.Soten.Data.Md2Data,
-                       Codec.Soten.Data.ObjData,
-                       Codec.Soten.Data.StlData,
-                       Codec.Soten.Data.XglData,
-                       Codec.Soten.Importer,
-                       Codec.Soten.Importer.ObjImporter,
-                       Codec.Soten.Importer.StlImporter,
-                       Codec.Soten.Importer.XglImporter,
-                       Codec.Soten.Importer.XglImporterTest,
-                       Codec.Soten.Internal.ImporterRegistry,
-                       Codec.Soten.Parser.Md2Parser,
-                       Codec.Soten.Parser.Md2ParserTest,
-                       Codec.Soten.Parser.ObjFileParser,
-                       Codec.Soten.Parser.ObjMtlParser,
-                       Codec.Soten.Parser.StlParser,
-                       Codec.Soten.Parser.XglParser,
-                       Codec.Soten.Parser.XglParserTest,
-                       Codec.Soten.PostProcess.FixInfacingNormals,
-                       Codec.Soten.PostProcess.FixInfacingNormalsTest,
-                       Codec.Soten.PostProcess.GenNormals,
-                       Codec.Soten.PostProcess.GenNormalsTest,
-                       Codec.Soten.Scene,
-                       Codec.Soten.Scene.Anim,
-                       Codec.Soten.Scene.Camera,
-                       Codec.Soten.Scene.Light,
-                       Codec.Soten.Scene.Material,
-                       Codec.Soten.Scene.Mesh,
-                       Codec.Soten.Scene.MetaData,
-                       Codec.Soten.Scene.Texture,
-                       Codec.Soten.Types,
-                       Codec.Soten.Util,
-                       Data.Serialize.Int
-  build-depends:       base >=4.6 && <4.9,
-                       GLUT,
-                       OpenGL,
-                       soten,
-                       vector
-  hs-source-dirs:      samples/SimpleOpenGL
-  default-language:    Haskell2010
-  ghc-options:         -W
+    main-is: Main.hs
+    build-depends:
+        base >=4.6 && <4.9,
+        GLUT >=2.7.0.1 && <2.8,
+        OpenGL >=2.12.0.1 && <2.13,
+        soten -any,
+        vector >=0.11.0.0 && <0.12
+    default-language: Haskell2010
+    hs-source-dirs: samples/SimpleOpenGL
+    other-modules:
+        Codec.Soten.BaseImporter
+        Codec.Soten.Data.Md2Data
+        Codec.Soten.Data.ObjData
+        Codec.Soten.Data.StlData
+        Codec.Soten.Data.XglData
+        Codec.Soten.Importer
+        Codec.Soten.Importer.ObjImporter
+        Codec.Soten.Importer.StlImporter
+        Codec.Soten.Importer.XglImporter
+        Codec.Soten.Importer.XglImporterTest
+        Codec.Soten.Internal.ImporterRegistry
+        Codec.Soten.Parser.Md2Parser
+        Codec.Soten.Parser.Md2ParserTest
+        Codec.Soten.Parser.ObjFileParser
+        Codec.Soten.Parser.ObjMtlParser
+        Codec.Soten.Parser.StlParser
+        Codec.Soten.Parser.XglParser
+        Codec.Soten.Parser.XglParserTest
+        Codec.Soten.PostProcess.FixInfacingNormals
+        Codec.Soten.PostProcess.FixInfacingNormalsTest
+        Codec.Soten.PostProcess.GenNormals
+        Codec.Soten.PostProcess.GenNormalsTest
+        Codec.Soten.Scene
+        Codec.Soten.Scene.Anim
+        Codec.Soten.Scene.Camera
+        Codec.Soten.Scene.Light
+        Codec.Soten.Scene.Material
+        Codec.Soten.Scene.Mesh
+        Codec.Soten.Scene.MetaData
+        Codec.Soten.Scene.Texture
+        Codec.Soten.Types
+        Codec.Soten.Util
+        Data.Serialize.Int
+    ghc-options: -W
 
- 
-source-repository head
-  type:     git
-  location: http://github.com/triplepointfive/soten
+test-suite test-soten
+    type: exitcode-stdio-1.0
+    main-is: Spec.hs
+    build-depends:
+        base -any,
+        hspec -any,
+        binary >=0.7.5.0 && <0.8,
+        bytestring >=0.10.6.0 && <0.11,
+        cereal >=0.4.1.1 && <0.5,
+        containers >=0.5.6.2 && <0.6,
+        directory >=1.2.2.0 && <1.3,
+        filepath >=1.4.0.0 && <1.5,
+        text >=1.2.1.3 && <1.3,
+        lens >=4.12.2 && <4.13,
+        linear >=1.19.1.3 && <1.20,
+        MissingH >=1.3.0.1 && <1.4,
+        mtl >=2.2.1 && <2.3,
+        safe >=0.3.9 && <0.4,
+        unix >=2.7.1.0 && <2.8,
+        vector >=0.11.0.0 && <0.12,
+        hxt >=9.3.1.15 && <9.4,
+        zlib >=0.6.1.1 && <0.7
+    cpp-options: -DTEST_MODE=true
+    default-language: Haskell2010
+    hs-source-dirs: src test
+    ghc-options: -W
