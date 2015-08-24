@@ -19,6 +19,18 @@ import           Codec.Soten.Data.Md2Data
 import           Codec.Soten.Parser.Md2Parser
                  ( getModel
                  )
+import           Codec.Soten.Scene.Material
+                 ( newMaterial
+                 , ShadingMode(..)
+                 , MaterialProperty(..)
+                 , TextureType(..)
+                 , addProperty
+                 )
+import           Codec.Soten.Scene.Mesh
+                 ( PrimitiveType(..)
+                 , newMesh
+                 , meshPrimitiveTypes
+                 )
 import           Codec.Soten.Scene
                  ( Scene(..)
                  , sceneMeshes
@@ -55,9 +67,32 @@ internalReadFile filePath = (Right . transformModel) <$> getModel filePath
 transformModel :: Model -> Scene
 transformModel Model{..} = newScene
     & sceneRootNode .~ rootNode
+    & sceneMaterials .~ V.singleton material
+    & sceneMeshes .~ V.singleton mesh
   where
     rootNode = newNode
         & nodeMeshes .~ V.singleton 0
+
+    material = foldl addProperty newMaterial
+        (MaterialShadingModel ShadingModeGouraud : materialProperties)
+
+    materialProperties = if null skins
+        then [ MaterialColorDiffuse (V3 1 1 1)
+             , MaterialColorSpecular (V3 1 1 1)
+             , MaterialColorAmbient (V3 0.05 0.05 0.05)
+             , MaterialTexture TextureTypeDiffuse (texture $ head skins)
+             ]
+        else [ MaterialColorDiffuse (V3 0.6 0.6 0.6)
+             , MaterialColorSpecular (V3 0.6 0.6 0.6)
+             , MaterialColorAmbient (V3 0.05 0.05 0.05)
+             , MaterialTexture TextureTypeDiffuse "texture.bmp"
+             ]
+    mesh = newMesh
+        & meshPrimitiveTypes .~ V.singleton PrimitiveTriangle
+    -- TODO: Validate is not zero
+    -- TOOD: Use 1.0 if there is no texture coords
+    fDivisorU = skinWidth header
+    fDivisorV = skinHeight header
 
 normals :: [V3 Float]
 normals =
