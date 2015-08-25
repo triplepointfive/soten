@@ -8,6 +8,9 @@ module Codec.Soten.Importer.Md2Importer (
     Md2Importer(..)
 ) where
 
+import           Data.List
+                 ( genericIndex )
+
 import           Control.Lens ((&), (^.), (.~))
 import qualified Data.Vector as V
 import           Linear (V3(..))
@@ -32,6 +35,9 @@ import           Codec.Soten.Scene.Mesh
                  , PrimitiveType(..)
                  , newMesh
                  , meshPrimitiveTypes
+                 , meshTextureCoords
+                 , meshVertices
+                 , meshNormals
                  )
 import           Codec.Soten.Scene
                  ( Scene(..)
@@ -70,39 +76,67 @@ transformModel :: Model -> Scene
 transformModel Model{..} = newScene
     & sceneRootNode .~ rootNode
     & sceneMaterials .~ V.singleton material
-    & sceneMeshes .~ V.singleton (foldl addTriangle mesh triangles)
+    & sceneMeshes .~ V.singleton mesh
   where
     rootNode = newNode
         & nodeMeshes .~ V.singleton 0
 
     material = foldl addProperty newMaterial
         (MaterialShadingModel ShadingModeGouraud : materialProperties)
+      where
+        materialProperties = if null skins
+            then [ MaterialColorDiffuse (V3 1 1 1)
+                 , MaterialColorSpecular (V3 1 1 1)
+                 , MaterialColorAmbient (V3 0.05 0.05 0.05)
+                 , MaterialTexture TextureTypeDiffuse (texture $ head skins)
+                 ]
+            else [ MaterialColorDiffuse (V3 0.6 0.6 0.6)
+                 , MaterialColorSpecular (V3 0.6 0.6 0.6)
+                 , MaterialColorAmbient (V3 0.05 0.05 0.05)
+                 , MaterialTexture TextureTypeDiffuse "texture.bmp"
+                 ]
 
-    materialProperties = if null skins
-        then [ MaterialColorDiffuse (V3 1 1 1)
-             , MaterialColorSpecular (V3 1 1 1)
-             , MaterialColorAmbient (V3 0.05 0.05 0.05)
-             , MaterialTexture TextureTypeDiffuse (texture $ head skins)
-             ]
-        else [ MaterialColorDiffuse (V3 0.6 0.6 0.6)
-             , MaterialColorSpecular (V3 0.6 0.6 0.6)
-             , MaterialColorAmbient (V3 0.05 0.05 0.05)
-             , MaterialTexture TextureTypeDiffuse "texture.bmp"
-             ]
     mesh = newMesh
         & meshPrimitiveTypes .~ V.singleton PrimitiveTriangle
-    -- TODO: Validate is not zero
-    -- TOOD: Use 1.0 if there is no texture coords
-    fDivisorU = skinWidth header
-    fDivisorV = skinHeight header
+        & meshTextureCoords  .~ V.fromList textureCoords
+        & meshVertices       .~ V.fromList (map fst vertsAndNorms)
+        & meshNormals        .~ V.fromList (map snd vertsAndNorms)
+
+    -- Because there is a single frame.
+    vertices = verts (head frames)
 
     -- TODO: Validate list bounds.
     -- TODO: Use vectors.
-    addTriangle :: Mesh -> Triangle -> Mesh
-    addTriangle mesh (Triangle [v1, v2, v3] [t1, t2, t3]) = undefined
+    vertsAndNorms :: [(V3 Float, V3 Float)]
+    vertsAndNorms = concatMap (map vertAndNormByIndex . vertex) triangles
+      where
+        vertAndNormByIndex :: [(V3 Float, V3 Float)]
+        vertAndNormByIndex index =
+            ( translate (head frames) + V3 x y z * scale (head frames)
+            , V3 nx ny nz
+            )
+          where
+            (Vertex [x, y, z] normIndex) = vertices `genericIndex` index
+            -- Flip z and y to become right-handed
+            (V3 nx nz ny) = normalsSet !! normIndex
 
-normals :: [V3 Float]
-normals =
+    textureCoords :: [V3 Float]
+    textureCoords = concatMap (map textureByIndex . st) triangles
+      where
+        textureByIndex index = V3
+            (fromIntegral s / fDivisorU)
+            (1 - fromIntegral t / fDivisorV)
+            0
+          where
+            (TexCoord s t) = texCoords `genericIndex` index
+        -- TODO: Validate is not zero
+        -- TOOD: Use 1.0 if there is no texture coords
+        fDivisorU, fDivisorV :: Float
+        fDivisorU = fromIntegral (skinWidth header)
+        fDivisorV = fromIntegral (skinHeight header)
+
+normalsSet :: [V3 Float]
+normalsSet =
   [ V3 (-0.525731)   0.000000    0.850651
   , V3 (-0.442863)   0.238856    0.864188
   , V3 (-0.295242)   0.000000    0.955423
