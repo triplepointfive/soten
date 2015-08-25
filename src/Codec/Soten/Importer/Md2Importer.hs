@@ -1,6 +1,7 @@
 -- | Defines the Md2Importer.
 {- Importer notes:
   - Assumes model file contains a single mesh.
+  - Assumes there is a single frame.
 -}
 {-# LANGUAGE RecordWildCards #-}
 module Codec.Soten.Importer.Md2Importer (
@@ -27,7 +28,8 @@ import           Codec.Soten.Scene.Material
                  , addProperty
                  )
 import           Codec.Soten.Scene.Mesh
-                 ( PrimitiveType(..)
+                 ( Mesh
+                 , PrimitiveType(..)
                  , newMesh
                  , meshPrimitiveTypes
                  )
@@ -68,7 +70,7 @@ transformModel :: Model -> Scene
 transformModel Model{..} = newScene
     & sceneRootNode .~ rootNode
     & sceneMaterials .~ V.singleton material
-    & sceneMeshes .~ V.singleton mesh
+    & sceneMeshes .~ V.singleton (foldl addTriangle mesh triangles)
   where
     rootNode = newNode
         & nodeMeshes .~ V.singleton 0
@@ -93,6 +95,11 @@ transformModel Model{..} = newScene
     -- TOOD: Use 1.0 if there is no texture coords
     fDivisorU = skinWidth header
     fDivisorV = skinHeight header
+
+    -- TODO: Validate list bounds.
+    -- TODO: Use vectors.
+    addTriangle :: Mesh -> Triangle -> Mesh
+    addTriangle mesh (Triangle [v1, v2, v3] [t1, t2, t3]) = undefined
 
 normals :: [V3 Float]
 normals =
