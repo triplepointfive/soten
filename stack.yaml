@@ -58,4 +58,9 @@ extra-deps:
 - vector-0.11.0.0
 - void-0.7
 - zlib-0.6.1.1
+- hspec-2.2.0
+- QuickCheck-2.8.1
+- hspec-core-2.2.0
+- hspec-discover-2.2.0
+- hspec-expectations-0.7.2
 resolver: ghc-7.10

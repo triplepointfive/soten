@@ -11,7 +11,7 @@ module Codec.Soten.Importer.Md2Importer (
 import           Data.List
                  ( genericIndex )
 
-import           Control.Lens ((&), (^.), (.~))
+import           Control.Lens ((&), (.~))
 import qualified Data.Vector as V
 import           Linear (V3(..))
 
@@ -31,13 +31,14 @@ import           Codec.Soten.Scene.Material
                  , addProperty
                  )
 import           Codec.Soten.Scene.Mesh
-                 ( Mesh
-                 , PrimitiveType(..)
+                 ( PrimitiveType(..)
+                 , Face(..)
                  , newMesh
                  , meshPrimitiveTypes
                  , meshTextureCoords
                  , meshVertices
                  , meshNormals
+                 , meshFaces
                  )
 import           Codec.Soten.Scene
                  ( Scene(..)
@@ -101,6 +102,11 @@ transformModel Model{..} = newScene
         & meshTextureCoords  .~ V.fromList textureCoords
         & meshVertices       .~ V.fromList (map fst vertsAndNorms)
         & meshNormals        .~ V.fromList (map snd vertsAndNorms)
+        & meshFaces          .~ V.fromList faces
+
+    -- TODO: Fail if verts count is not a mod of 3.
+    faces = map (\ i -> Face (V.fromList [3 * i, 3 * i + 1, 3 * i + 2 ]))
+        [0..fromIntegral (numVertices header `div` 3)]
 
     -- Because there is a single frame.
     vertices = verts (head frames)
@@ -110,15 +116,16 @@ transformModel Model{..} = newScene
     vertsAndNorms :: [(V3 Float, V3 Float)]
     vertsAndNorms = concatMap (map vertAndNormByIndex . vertex) triangles
       where
-        vertAndNormByIndex :: [(V3 Float, V3 Float)]
+        vertAndNormByIndex :: Integral i => i -> (V3 Float, V3 Float)
         vertAndNormByIndex index =
-            ( translate (head frames) + V3 x y z * scale (head frames)
+            ( translate (head frames) + vertexLocalPos * scale (head frames)
             , V3 nx ny nz
             )
           where
+            vertexLocalPos = fromIntegral <$> V3 x y z
             (Vertex [x, y, z] normIndex) = vertices `genericIndex` index
             -- Flip z and y to become right-handed
-            (V3 nx nz ny) = normalsSet !! normIndex
+            (V3 nx nz ny) = normalsSet `genericIndex` normIndex
 
     textureCoords :: [V3 Float]
     textureCoords = concatMap (map textureByIndex . st) triangles

@@ -24,6 +24,7 @@ library
         Codec.Soten.Data.StlData
         Codec.Soten.Data.XglData
         Codec.Soten.Importer
+        Codec.Soten.Importer.Md2Importer
         Codec.Soten.Importer.ObjImporter
         Codec.Soten.Importer.StlImporter
         Codec.Soten.Importer.XglImporter
@@ -81,40 +82,6 @@ executable SimpleOpenGL
         vector >=0.11.0.0 && <0.12
     default-language: Haskell2010
     hs-source-dirs: samples/SimpleOpenGL
-    other-modules:
-        Codec.Soten.BaseImporter
-        Codec.Soten.Data.Md2Data
-        Codec.Soten.Data.ObjData
-        Codec.Soten.Data.StlData
-        Codec.Soten.Data.XglData
-        Codec.Soten.Importer
-        Codec.Soten.Importer.ObjImporter
-        Codec.Soten.Importer.StlImporter
-        Codec.Soten.Importer.XglImporter
-        Codec.Soten.Importer.XglImporterTest
-        Codec.Soten.Internal.ImporterRegistry
-        Codec.Soten.Parser.Md2Parser
-        Codec.Soten.Parser.Md2ParserTest
-        Codec.Soten.Parser.ObjFileParser
-        Codec.Soten.Parser.ObjMtlParser
-        Codec.Soten.Parser.StlParser
-        Codec.Soten.Parser.XglParser
-        Codec.Soten.Parser.XglParserTest
-        Codec.Soten.PostProcess.FixInfacingNormals
-        Codec.Soten.PostProcess.FixInfacingNormalsTest
-        Codec.Soten.PostProcess.GenNormals
-        Codec.Soten.PostProcess.GenNormalsTest
-        Codec.Soten.Scene
-        Codec.Soten.Scene.Anim
-        Codec.Soten.Scene.Camera
-        Codec.Soten.Scene.Light
-        Codec.Soten.Scene.Material
-        Codec.Soten.Scene.Mesh
-        Codec.Soten.Scene.MetaData
-        Codec.Soten.Scene.Texture
-        Codec.Soten.Types
-        Codec.Soten.Util
-        Data.Serialize.Int
     ghc-options: -W
 
 test-suite test-soten

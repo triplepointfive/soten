@@ -8,6 +8,7 @@ module Codec.Soten.Internal.ImporterRegistry (
 import qualified Data.Vector as V
 
 import           Codec.Soten.BaseImporter (BaseImporter(..))
+import           Codec.Soten.Importer.Md2Importer (Md2Importer(..))
 import           Codec.Soten.Importer.ObjImporter (ObjImporter(..))
 import           Codec.Soten.Importer.StlImporter (StlImporter(..))
 
@@ -23,4 +24,5 @@ getImporterInstanceList =
     V.fromList
     [ Importers ObjImporter
     , Importers StlImporter
+    , Importers Md2Importer
     ]
