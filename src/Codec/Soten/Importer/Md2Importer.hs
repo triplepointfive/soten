@@ -86,15 +86,15 @@ transformModel Model{..} = newScene
         (MaterialShadingModel ShadingModeGouraud : materialProperties)
       where
         materialProperties = if null skins
-            then [ MaterialColorDiffuse (V3 1 1 1)
-                 , MaterialColorSpecular (V3 1 1 1)
-                 , MaterialColorAmbient (V3 0.05 0.05 0.05)
-                 , MaterialTexture TextureTypeDiffuse (texture $ head skins)
-                 ]
-            else [ MaterialColorDiffuse (V3 0.6 0.6 0.6)
+            then [ MaterialColorDiffuse (V3 0.6 0.6 0.6)
                  , MaterialColorSpecular (V3 0.6 0.6 0.6)
                  , MaterialColorAmbient (V3 0.05 0.05 0.05)
                  , MaterialTexture TextureTypeDiffuse "texture.bmp"
+                 ]
+            else [ MaterialColorDiffuse (V3 1 1 1)
+                 , MaterialColorSpecular (V3 1 1 1)
+                 , MaterialColorAmbient (V3 0.05 0.05 0.05)
+                 , MaterialTexture TextureTypeDiffuse (texture $ head skins)
                  ]
 
     mesh = newMesh

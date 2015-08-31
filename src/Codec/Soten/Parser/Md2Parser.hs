@@ -2,6 +2,7 @@
 {-# LANGUAGE RankNTypes #-}
 module Codec.Soten.Parser.Md2Parser (
     getModel
+  , load
 ) where
 
 import           Data.Int

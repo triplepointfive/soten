@@ -3,6 +3,7 @@ module Codec.Soten.Importer.Md2ImporterTest where
 
 import Test.Hspec
 
+import Codec.Soten.Scene.Material
 import Codec.Soten.BaseImporter
 import Codec.Soten.Importer.Md2Importer
 import Codec.Soten.Util
