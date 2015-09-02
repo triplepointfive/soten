@@ -121,7 +121,8 @@ loadFrames verticesCount string
         Left message   -> throw $ DeadlyImporterError $
             "Failed to parse MD2.Frame: " ++ message
   where
-    (x, xs) = BS.splitAt (sizeOfFrame + fromIntegral (verticesCount * sizeOfVertex)) string
+    verticesSize = verticesCount * sizeOfVertex
+    (x, xs) = BS.splitAt (sizeOfFrame + fromIntegral verticesSize) string
 
     addVertices :: Frame -> Frame
     addVertices frame =
