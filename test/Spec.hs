@@ -15,6 +15,7 @@ import Codec.Soten.Parser.Md2ParserTest
 import Codec.Soten.Parser.XglParserTest
 import Codec.Soten.PostProcess.FixInfacingNormalsTest
 import Codec.Soten.PostProcess.GenNormalsTest
+import Codec.Soten.PostProcess.TriangulateTest
 
 main :: IO ()
 main = hspec $ do
@@ -27,6 +28,7 @@ main = hspec $ do
 
   fixInfacingNormalsTest
   genNormalsTest
+  triangulateTest
 
   describe "Importer" $ do
     context "Errors" $ do

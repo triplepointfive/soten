@@ -39,4 +39,10 @@ triangulateIfNeeded mesh@Mesh{..} = if needToProceed
 
 -- | Triangulates mesh.
 triangulateMesh :: Mesh -> Mesh
-triangulateMesh mesh@Mesh{..} = undefined
+triangulateMesh mesh@Mesh{..} = mesh
+    & meshPrimitiveTypes .~ primitiveTypes
+  where
+    primitiveTypes = V.filter (/=PrimitivePolygone) $
+        if PrimitiveTriangle `V.elem` _meshPrimitiveTypes
+        then _meshPrimitiveTypes
+        else V.cons PrimitiveTriangle _meshPrimitiveTypes
