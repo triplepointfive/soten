@@ -66,7 +66,19 @@ faceWith3Indices = return . V.singleton
 
 -- | Optimized code for quadrilaterals.
 faceWith4Indices :: Face -> State Mesh (V.Vector Face)
-faceWith4Indices Face{..} = undefined
+faceWith4Indices Face{..} = do
+    mesh <- get
+    let startVertex = concaveVertexIndex (_meshVertices mesh)
+        faceVerts   = V.toList _faceIndices
+        face1       = [ startVertex
+                      , (startVertex + 1) `mod` 4
+                      , (startVertex + 2) `mod` 4
+                      ]
+        face2       = [ startVertex
+                      , (startVertex + 2) `mod` 4
+                      , (startVertex + 3) `mod` 4
+                      ]
+    return $ V.fromList $ map (Face . V.fromList) [face1, face2]
   where
     -- Quads can have at maximum one concave vertex. Determine
     -- this vertex (if it exists) and start tri-fanning from it.
