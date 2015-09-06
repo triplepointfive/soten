@@ -1,5 +1,15 @@
--- | Implementation of the post processing step to generate face
+--------------------------------------------------------------------
+-- |
+-- Copyright :  (c) 2015 Smelkov Ilya
+-- License   :  MIT
+-- Maintainer:  Smelkov Ilya <triplepointfive@gmail.com>
+-- Stability :  experimental
+-- Portability: non-portable
+--
+-- Implementation of the post processing step to generate face
 -- normals for all imported faces.
+--
+--------------------------------------------------------------------
 module Codec.Soten.PostProcess.GenNormals (
     apply
 ) where
