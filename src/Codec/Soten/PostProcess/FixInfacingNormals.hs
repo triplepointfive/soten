@@ -1,5 +1,15 @@
--- | Implementation of the post processing step to invert
+--------------------------------------------------------------------
+-- |
+-- Copyright :  (c) 2015 Smelkov Ilya
+-- License   :  MIT
+-- Maintainer:  Smelkov Ilya <triplepointfive@gmail.com>
+-- Stability :  experimental
+-- Portability: non-portable
+--
+-- Implementation of the post processing step to invert
 -- all normals in meshes with infacing normals.
+--
+--------------------------------------------------------------------
 module Codec.Soten.PostProcess.FixInfacingNormals (
     apply
 ) where
