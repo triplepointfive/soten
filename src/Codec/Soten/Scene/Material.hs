@@ -158,7 +158,7 @@ data UVTransform =
       -- | Rotation - in counter-clockwise direction.
     , _uvRotation             :: !Float
     }
-    deriving Show
+    deriving (Show, Eq)
 makeLenses ''UVTransform
 
 newUVTransform :: UVTransform
@@ -184,6 +184,7 @@ data MaterialProperty
     | MaterialMappingModeU   !TextureType !TextureMapMode
     | MaterialMappingModeV   !TextureType !TextureMapMode
     | MaterialTwosided       !Bool
+    | MaterialUVTransform    !UVTransform
     | MaterialWireframe      !Bool
     deriving (Show, Eq)
 
