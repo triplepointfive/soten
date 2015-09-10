@@ -194,7 +194,7 @@ data Material =
     { -- | List of all material properties loaded.
       _materialProperties :: !(V.Vector MaterialProperty)
     }
-    deriving Show
+    deriving (Show, Eq)
 makeLenses ''Material
 
 -- | Adds a property to material.
