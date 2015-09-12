@@ -32,7 +32,10 @@ library
         Codec.Soten.PostProcess.CalcTangents
         Codec.Soten.PostProcess.FindInvalidData
         Codec.Soten.PostProcess.FixInfacingNormals
+        Codec.Soten.PostProcess.FlipUVs
+        Codec.Soten.PostProcess.FlipWindingOrder
         Codec.Soten.PostProcess.GenNormals
+        Codec.Soten.PostProcess.Triangulate
         Codec.Soten.Scene.Anim
         Codec.Soten.Scene.Camera
         Codec.Soten.Scene.Light

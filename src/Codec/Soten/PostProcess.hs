@@ -7,7 +7,11 @@ module Codec.Soten.PostProcess (
   , targetRealtimeMaxQuality
 ) where
 
-import Codec.Soten.PostProcess.FindInvalidData as FindInvalidData
+import Codec.Soten.PostProcess.FindInvalidData    as FindInvalidData
+import Codec.Soten.PostProcess.FlipWindingOrder   as FlipWindingOrder
+import Codec.Soten.PostProcess.Triangulate        as Triangulate
+import Codec.Soten.PostProcess.FixInfacingNormals as FixInfacingNormals
+import Codec.Soten.PostProcess.FlipUVs            as FlipUVs
 import Codec.Soten.Scene
 
 -- | Flags for possible post processing steps.
@@ -83,6 +87,10 @@ data PostProcessStep
 -- | Applies a post process on scene.
 applyPostProcess :: Scene -> PostProcessStep -> Scene
 applyPostProcess scene FindInvalidData = FindInvalidData.apply scene
+applyPostProcess scene FlipWindingOrder = FlipWindingOrder.apply scene
+applyPostProcess scene Triangulate = Triangulate.apply scene
+applyPostProcess scene FixInfacingNormals = FixInfacingNormals.apply scene
+applyPostProcess scene FlipUVs = FlipUVs.apply scene
 applyPostProcess scene _ = scene
 
 -- | Shortcut flag for Direct3D-based applications.

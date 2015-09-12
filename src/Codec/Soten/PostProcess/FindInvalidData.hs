@@ -8,7 +8,6 @@ import qualified Data.Vector as V
 import           Linear (V3(..))
 
 import           Codec.Soten.Scene
-import           Codec.Soten.Scene.Mesh
 
 data Action = Remove
 
@@ -18,8 +17,8 @@ apply = id
 processMesh :: Mesh -> Maybe Action
 processMesh mesh = undefined
 
-processVector :: (V.Vector (V3 Float)) -> Bool
-processVector vector = all id
+processVector :: V.Vector (V3 Float) -> Bool
+processVector vector = and
     [ vectorHasDifferentElements vector   -- All vectors are identical
     , V.all vectorFinite vector           -- Is NaN a component of vector
     , not $ V.any vectorZeroLength vector -- Found zero-length vector
@@ -33,8 +32,8 @@ processVector vector = all id
     vectorZeroLength _          = False
 
 vectorHasDifferentElements :: Eq a => V.Vector a -> Bool
-vectorHasDifferentElements vec = if V.length vec > 1
-    then isDifferentWith (V.head vec) (V.tail vec) else True
+vectorHasDifferentElements vec =
+    (V.length vec <= 1) || isDifferentWith (V.head vec) (V.tail vec)
   where
     isDifferentWith :: Eq a => a -> V.Vector a -> Bool
     isDifferentWith e vec
