@@ -183,6 +183,7 @@ data MaterialProperty
     | MaterialTexture        !TextureType !String
     | MaterialMappingModeU   !TextureType !TextureMapMode
     | MaterialMappingModeV   !TextureType !TextureMapMode
+    | MaterialTexMapAxis     !TextureType !(V3 Float)
     | MaterialTwosided       !Bool
     | MaterialUVTransform    !UVTransform
     | MaterialWireframe      !Bool
