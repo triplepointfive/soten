@@ -77,9 +77,9 @@ processMesh mesh
         vertexTangents idx
             -- Reconstruct tangent/bitangent according to normal and
             -- bitangent/tangent when it's infinite or NaN.
-            | (validVector localTangent) && not (validVector localBitangent) =
+            | validVector localTangent && not (validVector localBitangent) =
                 (localTangent, localTangent `cross` norm)
-            | (validVector localBitangent) && not (validVector localTangent) =
+            | validVector localBitangent && not (validVector localTangent) =
                 (norm `cross` localBitangent, localBitangent)
             | otherwise = (localTangent, localBitangent)
           where

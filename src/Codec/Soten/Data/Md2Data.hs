@@ -79,7 +79,7 @@ instance Serialize Header where
         _offsetGLCmds <- getInt32le
         _offsetEnd    <- getInt32le
 
-        return $ Header
+        return Header
             { ident        = _ident
             , version      = _version
             , skinWidth    = _skinWidth
@@ -119,7 +119,7 @@ sizeOfVector = 12
 data Skin
     = Skin
     { -- | Texture file name.
-      texture :: ![Char]
+      texture :: !String
     } deriving (Show, Eq)
 
 sizeOfSkin :: Int
@@ -191,7 +191,7 @@ data Frame
       -- | Translation vector.
     , translate :: !Vector
       -- | Frame name.
-    , name      :: ![Char]
+    , name      :: !String
       -- | List of frame's vertices.
     , verts     :: ![Vertex]
     } deriving (Show, Eq, Generic)

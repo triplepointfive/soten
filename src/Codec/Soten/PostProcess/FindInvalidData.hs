@@ -18,11 +18,10 @@ processMesh :: Mesh -> Maybe Action
 processMesh mesh = undefined
 
 processVector :: V.Vector (V3 Float) -> Bool
-processVector vector = and
-    [ vectorHasDifferentElements vector   -- All vectors are identical
-    , V.all vectorFinite vector           -- Is NaN a component of vector
-    , not $ V.any vectorZeroLength vector -- Found zero-length vector
-    ]
+processVector vector =
+    vectorHasDifferentElements vector        -- All vectors are identical.
+      && V.all vectorFinite vector           -- Is NaN a component of vector.
+      && not (V.any vectorZeroLength vector) -- Found zero-length vector.
   where
     vectorFinite :: V3 Float -> Bool
     vectorFinite (V3 x y z) = not $ any isNaN [x, y, z]
