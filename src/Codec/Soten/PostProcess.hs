@@ -1,6 +1,7 @@
 -- | Implement shared utility functions for postprocessing steps.
 module Codec.Soten.PostProcess (
     PostProcessStep(..)
+  , applyPostProcess
   , convertToLeftHanded
   , targetRealtimeFast
   , targetRealtimeQuality

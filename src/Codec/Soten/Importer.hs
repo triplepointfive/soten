@@ -8,6 +8,7 @@ module Codec.Soten.Importer (
   , importerStringProperty
   , importerMatrixProperty
   , readModelFile
+  , readModelFileWithProcess
   , resetImporterScene
 )where
 
@@ -27,7 +28,10 @@ import           Linear.Matrix
                  ( M44
                  )
 
--- TODO: Add post process registry
+import           Codec.Soten.PostProcess
+                 ( PostProcessStep
+                 , applyPostProcess
+                 )
 import           Codec.Soten.BaseImporter
                  ( BaseImporter(..)
                  )
@@ -102,6 +106,15 @@ readModelFile fileName =
     importerByHeader = findImporterWithExtension fileName
         CheckHeader importer
     parse = parseWithImporter fileName newImporter
+
+-- | Reads the given file and applies post process steps in given order.
+readModelFileWithProcess :: FilePath
+                         -> [PostProcessStep]
+                         -> IO (Either String Scene)
+readModelFileWithProcess fileName processes =
+    fmap postProcess <$> readModelFile fileName
+  where
+    postProcess scene = foldl applyPostProcess scene processes
 
 parseWithImporter :: FilePath
                   -> Importer

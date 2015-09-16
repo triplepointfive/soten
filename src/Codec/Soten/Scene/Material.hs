@@ -24,7 +24,7 @@ module Codec.Soten.Scene.Material (
 
 import           Control.Lens (makeLenses, (&), (%~))
 import qualified Data.Vector as V
-import           Linear (V2(..))
+import           Linear (V2(..), V3(..))
 
 import           Codec.Soten.Types (Color3D)
 

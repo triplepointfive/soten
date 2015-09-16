@@ -1,7 +1,14 @@
 -- | Defines the interface to import models.
 module Codec.Soten (module X) where
 import Linear as X
-import Codec.Soten.Importer as X (readModelFile)
+import Codec.Soten.Importer as X (readModelFile, readModelFileWithProcess)
+import Codec.Soten.PostProcess as X
+  ( PostProcessStep(..)
+  , convertToLeftHanded
+  , targetRealtimeFast
+  , targetRealtimeQuality
+  , targetRealtimeMaxQuality
+  )
 import Codec.Soten.Scene as X
 import Codec.Soten.Scene.Anim as X
 import Codec.Soten.Scene.Camera as X

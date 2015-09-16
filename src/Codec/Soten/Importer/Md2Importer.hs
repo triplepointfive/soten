@@ -106,7 +106,7 @@ transformModel Model{..} = newScene
 
     -- TODO: Fail if verts count is not a mod of 3.
     faces = map (\ i -> Face (V.fromList [3 * i, 3 * i + 1, 3 * i + 2 ]))
-        [0..fromIntegral (numVertices header `div` 3)]
+        [0..fromIntegral (numTris header) - 1]
 
     -- Because there is a single frame.
     vertices = verts (head frames)
