@@ -31,7 +31,14 @@ apply scene = scene
 
 -- | Recursively converts a node, all of its children and all of its meshes.
 processNode :: Node -> Node
-processNode = undefined
+processNode node = node & nodeTransformation .~
+    V4 (V4    a1    a2 (-a3)    a4)
+       (V4    b1    b2 (-b3)    b4)
+       (V4 (-c1) (-c1)   c3  (-c4))
+       (V4    d1    d2 (-d3)    d4)
+  where
+    (V4 (V4 a1 a2 a3 a4) (V4 b1 b2 b3 b4) (V4 c1 c2 c3 c4) (V4 d1 d2 d3 d4)) =
+      _nodeTransformation node
 
 -- | Process a mesh.
 processMesh :: Mesh -> Mesh
@@ -46,5 +53,23 @@ processMaterial = materialProperties %~ V.map convertMat
     convertMat property = property
 
 -- | Transform all animation channels.
-processAnimation :: Animation -> Animation
-processAnimation = undefined
+processAnimation :: NodeAnim -> NodeAnim
+processAnimation = animationChannels %~ V.map processNodeAnim
+
+-- | Transform a single animation node.
+processNodeAnim :: NodeAnim -> NodeAnim
+processNodeAnim nodeAmin = nodeAnim
+    & nodeAnimPositionKeys %~ V.map flipVectorKey
+    & nodeAnimRotationKeys %~ V.map flipQuatKey
+  where
+    flipVectorKey :: VectorKey -> VectorKey
+    flipVectorKey = vectorValue %~ V.map flipV3
+
+    flipV3 :: V3 Float -> V3 Float
+    flipV3 (V3 x y z) = V3 x y (-z)
+
+    flipQuatKey :: QuatKey -> QuatKey
+    flipQuatKey = quatKeyTime %~ V.map flipQuaternion
+
+    flipQuaternion :: Quaternion -> Quaternion
+    flipQuaternion (Quaternion q (V3 x y z)) = Quaternion q (V3 (-x) (-y) z)
