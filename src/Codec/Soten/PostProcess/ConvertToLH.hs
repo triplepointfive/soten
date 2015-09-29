@@ -31,18 +31,18 @@ apply scene = scene
 
 -- | Recursively converts a node, all of its children and all of its meshes.
 processNode :: Node -> Node
-processNode node = node & nodeTransformation .~
-    V4 (V4    a1    a2 (-a3)    a4)
-       (V4    b1    b2 (-b3)    b4)
-       (V4 (-c1) (-c1)   c3  (-c4))
-       (V4    d1    d2 (-d3)    d4)
-  where
-    (V4 (V4 a1 a2 a3 a4) (V4 b1 b2 b3 b4) (V4 c1 c2 c3 c4) (V4 d1 d2 d3 d4)) =
-      _nodeTransformation node
+processNode node = node & nodeTransformation %~ flipMatrix
 
 -- | Process a mesh.
 processMesh :: Mesh -> Mesh
-processMesh = undefined
+processMesh mesh = mesh
+    -- Mirror bitangents as well as they're derived from the texture coords.
+    & meshBitangents %~ V.map (*(-1))
+    & meshBones      %~ V.map processBone
+
+-- | Process a bone.
+processBone :: Bone -> Bone
+processBone = boneOffsetMatrix %~ flipMatrix
 
 -- | Process a material.
 processMaterial :: Material -> Material
@@ -65,11 +65,21 @@ processNodeAnim nodeAmin = nodeAnim
     flipVectorKey :: VectorKey -> VectorKey
     flipVectorKey = vectorValue %~ V.map flipV3
 
-    flipV3 :: V3 Float -> V3 Float
-    flipV3 (V3 x y z) = V3 x y (-z)
-
     flipQuatKey :: QuatKey -> QuatKey
     flipQuatKey = quatKeyTime %~ V.map flipQuaternion
 
     flipQuaternion :: Quaternion -> Quaternion
     flipQuaternion (Quaternion q (V3 x y z)) = Quaternion q (V3 (-x) (-y) z)
+
+-- | Flips a matrix to LH.
+flipMatrix :: M44 Float -> M44 Float
+flipMatrix (V4 a b c d) =
+    V4 (V4    a1    a2 (-a3)    a4)
+       (V4    b1    b2 (-b3)    b4)
+       (V4 (-c1) (-c2)   c3  (-c4))
+       (V4    d1    d2 (-d3)    d4)
+  where
+    (V4 a1 a2 a3 a4) = a
+    (V4 b1 b2 b3 b4) = b
+    (V4 c1 c2 c3 c4) = c
+    (V4 d1 d2 d3 d4) = d
