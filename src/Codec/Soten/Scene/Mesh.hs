@@ -13,6 +13,7 @@ module Codec.Soten.Scene.Mesh (
   , boneName
   , boneVertexWeights
   , boneOffsetMatrix
+  , newBone
 
   , Mesh(..)
   , meshPrimitiveTypes
@@ -42,7 +43,7 @@ import           Data.Maybe (isJust)
 import           Control.Lens (makeLenses, (^.))
 import qualified Data.Vector as V
 import           Linear (V3(..))
-import           Linear.Matrix (M44)
+import           Linear.Matrix (M44, identity)
 
 import           Codec.Soten.Types (Color4D, Index)
 
@@ -88,6 +89,13 @@ data Bone =
     , _boneOffsetMatrix :: !(M44 Float)
     } deriving (Show, Eq)
 makeLenses ''Bone
+
+newBone :: Bone
+newBone = Bone
+    { _boneName          = ""
+    , _boneVertexWeights = V.empty
+    , _boneOffsetMatrix  = identity
+    }
 
 -- | A mesh represents a geometry or model with a single material.
 data Mesh =

@@ -13,6 +13,7 @@ import Codec.Soten.Importer.StlImporterTest
 import Codec.Soten.Importer.XglImporterTest
 import Codec.Soten.Parser.Md2ParserTest
 import Codec.Soten.Parser.XglParserTest
+import Codec.Soten.PostProcess.ConvertToLHTest
 import Codec.Soten.PostProcess.FixInfacingNormalsTest
 import Codec.Soten.PostProcess.FlipUVsTest
 import Codec.Soten.PostProcess.FlipWindingOrderTest
@@ -28,6 +29,7 @@ main = hspec $ do
   stlImporterTest
   xglImporterTest
 
+  convertToLHTest
   fixInfacingNormalsTest
   flipUVsTest
   flipWindingOrderTest
