@@ -33,12 +33,30 @@ mesh = newMesh
     & meshBitangents .~ V.singleton (V3 1 3 6)
     & meshBones      .~ V.singleton bone
 
+bone :: Bone
 bone = newBone & boneOffsetMatrix .~ transformMatrix
+
+material :: Material
+material = addProperty newMaterial property
+  where
+    property = MaterialTexMapAxis TextureTypeNone (V3 (-1) (-2) (-3))
+
+animation :: Animation
+animation = newAnimation & animationChannels .~ V.singleton animNode
+  where
+    animNode :: NodeAnim
+    animNode = newNodeAnim
+        & nodeAnimPositionKeys .~ V.singleton vecKey
+        & nodeAnimRotationKeys .~ V.singleton quatKey
+    vecKey = VectorKey 0.1 (V3 (-1) (-2) 3)
+    quatKey = QuatKey 0.2 (Quaternion 1 (V3 (-1) (-2) 3))
 
 originScene, scene :: Scene
 originScene = newScene
-    & sceneRootNode .~ rootNode
-    & sceneMeshes   .~ V.singleton mesh
+    & sceneRootNode   .~ rootNode
+    & sceneMeshes     .~ V.singleton mesh
+    & sceneMaterials  .~ V.singleton material
+    & sceneAnimations .~ V.singleton animation
 scene = apply originScene
 
 convertToLHTest :: Spec
@@ -64,6 +82,17 @@ convertToLHTest =
       it "Bones" $ do
         let fixedBone = V.head (fixedMesh ^. meshBones)
         (fixedBone ^. boneOffsetMatrix) `shouldBe` flipedTransMatrix
-    -- context "Materials" $ do
-      -- let fixedMaterial = V.head (scene ^. sceneMaterials)
-
+    context "Materials" $ do
+      let fixedMaterial = V.head (scene ^. sceneMaterials)
+      it "Texture map axis" $
+        V.head (fixedMaterial ^. materialProperties) `shouldBe`
+          MaterialTexMapAxis TextureTypeNone (V3 1 2 3)
+    context "Animation nodes" $ do
+      let fixedAnimation = V.head (scene ^. sceneAnimations)
+          fixedNodeAnim = V.head (fixedAnimation ^. animationChannels)
+      it "Position keys" $
+        V.head (fixedNodeAnim ^. nodeAnimPositionKeys) `shouldBe`
+          VectorKey 0.1 (V3 1 2 3)
+      it "Rotation keys" $
+        V.head (fixedNodeAnim ^. nodeAnimRotationKeys) `shouldBe`
+          QuatKey 0.2 (Quaternion 1 (V3 1 2 3))

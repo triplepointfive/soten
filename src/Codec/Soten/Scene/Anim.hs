@@ -4,7 +4,7 @@ module Codec.Soten.Scene.Anim (
   , vectorKeyTime
   , vectorValue
 
-  , QuatKey
+  , QuatKey(..)
   , quatKeyTime
   , quatValue
 
