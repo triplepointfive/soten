@@ -9,7 +9,10 @@ import Control.Monad (replicateM, void)
 import Text.Parsec
 
 file = unlines
-    [ "v -1.000000 1.000000 0.000000  "
+    [ "# Blender v2.57 (sub 0) OBJ File: ''"
+    , "# www.blender.org"
+    , "o Cube_Cube.001"
+    , "v -1.000000 1.000000 0.000000  "
     , "v 1.000000 1.000000 0.000000   "
     , "v -1.000000 -1.000000 0.000000 "
     , "v 1.000000 -1.000000 0.000000  "
@@ -28,18 +31,17 @@ parseWithLeftOver p = parse ((,) <$> p <*> leftOver) ""
 
 -- | All parseble tokens.
 data Token
-    -- | Polygonal and free-form geometry statement.
-    = Vertex Float Float Float
-    -- | Vertex statement for both polygonal and free-form geometry.
-    | VertexTexture Float Float
+    -- | Specifies a geometric vertex and its x y z coordinates.
+    = Vertex !Float !Float !Float
+    -- | Specifies a texture vertex and its coordinates.
+    | VertexTexture !Float !Float
+    -- | Specifies a user-defined object name.
+    | Object !String
     deriving Show
 
 -- | A parser for all implemented tokens.
 model :: Parser [Token]
-model = many $ choice (map try [
-  between (string "vt") eol vertexTexture,
-  between (char 'v') eol vertex
-  ])
+model = many $ choice (map (try . lexeme) [vertexTexture, vertex, object])
 
 -- | Fast & dirty. TODO: should be more consistent.
 float :: Parser Float
@@ -59,11 +61,18 @@ eol = void $ manyTill anyChar newline
 
 -- | Parses `v` tag.
 vertex :: Parser Token
-vertex = Vertex <$> floatS <*> floatS <*> floatS -- <*> option 1 floatS
+vertex = char 'v' >> Vertex <$> floatS <*> floatS <*> floatS -- <*> option 1 floatS
 
 -- | Parses `vt` tag.
 vertexTexture :: Parser Token
-vertexTexture = VertexTexture <$> floatS <*> floatS -- <*> option 0 floatS
+vertexTexture = string "vt" >> VertexTexture <$> floatS <*> floatS -- <*> option 0 floatS
+
+-- | Parses `o` tag.
+object :: Parser Token
+object = char 'o' *> whitespace *> (Object <$> manyTill anyChar newline)
+
+lexeme :: Parser a -> Parser a
+lexeme p = many (char '#' *> eol) *> p <* eol
 
 -- | A comment, ignore the whole line.
 comment :: Parser ()
