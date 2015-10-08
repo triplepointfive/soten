@@ -1,70 +1,40 @@
-module Codec.Soten.Parser.ObjParser where
 {-
  - Not supported:
  - Free-form geometry statement.
  -}
+module Codec.Soten.Parser.ObjParser (
+      getModel
+) where
+import           Control.Monad (void)
 
-import Control.Monad (void)
+import           Text.Parsec
 
-import Text.Parsec
-
-file, cube :: String
-file = unlines
-    [ "# Blender v2.57 (sub 0) OBJ File: ''"
-    , "# www.blender.org"
-    , "o Cube_Cube.001"
-    , "v -1.000000 1.000000 0.000000  "
-    , "s off"
-    , "v 1.000000 1.000000 0.000000   "
-    , "v -1.000000 -1.000000 0.000000 "
-    , "v 1.000000 -1.000000 0.000000  "
-    , "vt 1.000000 1.000000           "
-    , "vt 0.000000 1.000000           "
-    , "vt 0.000000 0.000000           "
-    , "vt 1.000000 0.000000           "
-    , "usemtl (null)"
-    , "f 2/1 4/4 1/2"
-    , "f 4/4 3/3 1/2"
-    ]
-cube = unlines
-    [ "v 0.000000 2.000000 2.000000"
-    , "v 0.000000 0.000000 2.000000"
-    , "v 2.000000 0.000000 2.000000"
-    , "v 2.000000 2.000000 2.000000"
-    , "v 0.000000 2.000000 0.000000"
-    , "v 0.000000 0.000000 0.000000"
-    , "v 2.000000 0.000000 0.000000"
-    , "v 2.000000 2.000000 0.000000"
-    , "f 1 2 3 4"
-    , "f 8 7 6 5"
-    , "f 4 3 7 8"
-    , "f 5 1 4 8"
-    , "f 5 6 2 1"
-    , "f 2 6 7 3"
-    ]
+import           Codec.Soten.Data.ObjData
+import           Codec.Soten.Util
+                 ( DeadlyImporterError(..)
+                 , throw
+                 )
 
 -- | A synonym just to simplify signatures a bit.
 type Parser = Parsec String ()
 
--- | All parseble tokens.
-data Token
-    -- | Specifies a geometric vertex and its x y z coordinates.
-    = Vertex !Float !Float !Float
-    -- | Specifies a texture vertex and its coordinates.
-    | VertexTexture !Float !Float
-    -- | Specifies a user-defined object name.
-    | Object !String
-    -- | Specifies a face element and its vertex reference number.
-    | Face ![Int]
-    deriving Show
+-- | Parses obj file content into a model.
+getModel :: String -> Model
+getModel = validate . parse model ""
+
+-- | Returns model or fails with well-known 'DeadlyImporterError'.
+validate :: Either ParseError Model -> Model
+validate (Right m) = m
+validate (Left e) = throw $ DeadlyImporterError $
+    "Failed to parse OBJ model: " ++ show e
 
 -- | A parser for all implemented tokens.
 model :: Parser [Token]
 model = many $ choice $ map (try . lexeme) availableTags
 
--- | A list of supported tags parsers.
+-- | A list of supported tags parsers.  availableTags :: [Parser Token]
 availableTags :: [Parser Token]
-availableTags = [vertexTexture, vertex, object]
+availableTags = [vertexTexture, vertex, object, face]
 
 -- | Parses `v` tag.
 vertex :: Parser Token
@@ -121,7 +91,3 @@ lexeme p = many (comment <|> ignoreTags) *> p <* eol
 -- | A comment, ignore the whole line.
 comment :: Parser ()
 comment = char '#' *> eol
-
--- | An empty line.
-emptyLine :: Parser ()
-emptyLine = many space *> eol

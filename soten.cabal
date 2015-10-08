@@ -44,8 +44,7 @@ library
         Codec.Soten.Scene.MetaData
         Codec.Soten.Scene.Texture
         Codec.Soten.Parser.Md2Parser
-        Codec.Soten.Parser.ObjFileParser
-        Codec.Soten.Parser.ObjMtlParser
+        Codec.Soten.Parser.ObjParser
         Codec.Soten.Parser.StlParser
         Codec.Soten.Parser.XglParser
         Codec.Soten.PostProcess
@@ -109,6 +108,7 @@ test-suite test-soten
         unix >=2.7.1.0 && <2.8,
         vector >=0.11.0.0 && <0.12,
         hxt >=9.3.1.15 && <9.4,
+        parsec >= 3.1.9,
         zlib >=0.6.1.1 && <0.7
     cpp-options: -DTEST_MODE=true
     default-language: Haskell2010

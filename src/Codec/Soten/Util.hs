@@ -1,3 +1,4 @@
+{-# LANGUAGE RankNTypes #-}
 module Codec.Soten.Util (
     CheckType(..)
   , hasExtention
@@ -33,6 +34,7 @@ data CheckType
 hasExtention :: Foldable t => FilePath -> t String -> Bool
 hasExtention file = elem (map toLower (takeExtension file))
 
+degToRad, radToDeg :: forall a. Fractional a => a -> a
 degToRad x = x * 0.0174532925
 radToDeg x = x * 57.2957795
 
