@@ -18,7 +18,7 @@ validMesh = newMesh
 
 triangulateTest :: Spec
 triangulateTest = do
-  describe "Triangulate" $ do
+  describe "Triangulate post process" $ do
     context "Changes primitive types" $ do
       let scene = newScene & sceneMeshes  .~ V.singleton validMesh
           fixedSceneMesh = V.head $ (apply scene) ^. sceneMeshes

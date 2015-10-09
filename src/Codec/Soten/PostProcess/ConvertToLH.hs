@@ -14,7 +14,7 @@ module Codec.Soten.PostProcess.ConvertToLH (
     apply
 ) where
 
-import           Control.Lens ((&), (%~), (.~))
+import           Control.Lens ((&), (%~))
 import qualified Data.Vector as V
 import           Linear
 

@@ -25,7 +25,7 @@ flippedTransform = newUVTransform
 
 flipUVsTest :: Spec
 flipUVsTest =
-  describe "Flip UVs" $
+  describe "Flip UVs post process" $
     context "Flips" $ do
       let scene = newScene
             & sceneMeshes  .~ V.singleton validMesh

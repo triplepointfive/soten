@@ -82,7 +82,7 @@ ignoreTags = choice $ map (*> (whitespace *> eol)) unsupported
 
 -- | A list of unsupported tags parsers.
 unsupported :: [Parser ()]
-unsupported = [void (string "usemtl"), void (oneOf "sf")]
+unsupported = [void (string "usemtl"), void (oneOf "s")]
 
 -- | A helper to ignore comments.
 lexeme :: Parser a -> Parser a

@@ -16,7 +16,7 @@ mesh = newMesh & meshFaces .~ V.singleton (Face (V.fromList [1, 2, 3]))
 
 flipWindingOrderTest :: Spec
 flipWindingOrderTest =
-  describe "Flip winding order" $
+  describe "Flip winding order post process" $
     context "Flips" $ do
       let scene = newScene & sceneMeshes  .~ V.singleton mesh
           fixedSceneMesh = V.head $ apply scene ^. sceneMeshes

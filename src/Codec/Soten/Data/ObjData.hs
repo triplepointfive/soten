@@ -13,4 +13,4 @@ data Token
     | Object !String
     -- | Specifies a face element and its vertex reference number.
     | Face ![Int]
-    deriving Show
+    deriving (Eq, Show)

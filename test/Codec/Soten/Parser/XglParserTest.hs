@@ -12,8 +12,8 @@ import Codec.Soten.Parser.XglParser
 loadModelField f = runX $ readDocument [] "models/xgl/sample_official.xgl" >>> f
 
 xglParserTest :: Spec
-xglParserTest = do
-  describe "getModel" $ do
+xglParserTest =
+  describe "getModel" $
     context "Mandatory fields" $ do
       it "BackgroundColor" $ do
         vec <- loadModelField getBackgroud

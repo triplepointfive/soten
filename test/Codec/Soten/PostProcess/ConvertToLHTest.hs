@@ -3,7 +3,7 @@ module Codec.Soten.PostProcess.ConvertToLHTest where
 
 import Test.Hspec
 
-import Control.Lens ((&), (^.), (%~), (.~))
+import Control.Lens ((&), (^.), (.~))
 import qualified Data.Vector as V
 import Linear
 
@@ -61,7 +61,7 @@ scene = apply originScene
 
 convertToLHTest :: Spec
 convertToLHTest =
-  describe "Converts to Left Handed" $ do
+  describe "Convert to Left Handed post process" $ do
     context "Converts a node" $ do
       let fixedRootNode = scene ^. sceneRootNode
       it "Itself" $
