@@ -30,11 +30,14 @@ validate (Left e) = throw $ DeadlyImporterError $
 
 -- | A parser for all implemented tokens.
 model :: Parser [Token]
-model = many $ choice $ map (try . lexeme) availableTags
+model = many $ choice $ map try availableTags
 
 -- | A list of supported tags parsers.  availableTags :: [Parser Token]
 availableTags :: [Parser Token]
-availableTags = [vertexTexture, vertex, object, face]
+availableTags = special ++ map lexeme lexemed
+  where
+    lexemed = [vertexTexture, vertex, face]
+    special = [lexemePrefix *> object]
 
 -- | Parses `v` tag.
 vertex :: Parser Token
@@ -50,7 +53,21 @@ object = char 'o' *> whitespace *> (Object <$> manyTill anyChar newline)
 
 -- | Parses `f` tag.
 face :: Parser Token
-face = char 'f' *> (Face <$> many1 intS)
+face = char 'f' *> choice [try vertsAndTextures, try verts]
+  where
+    verts, vertsAndTextures :: Parser Token
+    verts = Face <$> many1 intS <*> return []
+    vertsAndTextures = do
+      vsATX <- many1 numWithSeparator
+      return (Face (map fst vsATX) (map snd vsATX))
+
+-- | Parses an expression matching pattern d/d.
+numWithSeparator :: Parser (Int, Int)
+numWithSeparator = whitespace *> do
+    a <- num
+    void $ char '/'
+    b <- num
+    return (a, b)
 
 -- | Integer number parser.
 num :: Parser Int
@@ -86,7 +103,11 @@ unsupported = [void (string "usemtl"), void (oneOf "s")]
 
 -- | A helper to ignore comments.
 lexeme :: Parser a -> Parser a
-lexeme p = many (comment <|> ignoreTags) *> p <* eol
+lexeme p = lexemePrefix *> p <* eol
+
+-- | Ignores shit before the actual tag.
+lexemePrefix :: Parser [()] -- TODO: Fix signature.
+lexemePrefix = many (comment <|> ignoreTags)
 
 -- | A comment, ignore the whole line.
 comment :: Parser ()

@@ -6,13 +6,12 @@ import Test.Hspec
 import Codec.Soten.Data.ObjData
 import Codec.Soten.Parser.ObjParser
 
-file, cube :: String
-file = unlines
+quad, cube :: String
+quad = unlines
     [ "# Blender v2.57 (sub 0) OBJ File: ''"
     , "# www.blender.org"
     , "o Cube_Cube.001"
     , "v -1.000000 1.000000 0.000000  "
-    , "s off"
     , "v 1.000000 1.000000 0.000000   "
     , "v -1.000000 -1.000000 0.000000 "
     , "v 1.000000 -1.000000 0.000000  "
@@ -21,8 +20,9 @@ file = unlines
     , "vt 0.000000 0.000000           "
     , "vt 1.000000 0.000000           "
     , "usemtl (null)"
-    , "f 2/1 4/4 1/2"
+    , "s off"
     , "f 4/4 3/3 1/2"
+    , "f 2/1 4/4 1/2"
     ]
 
 cube = unlines
@@ -44,12 +44,20 @@ cube = unlines
 
 objParserTest :: Spec
 objParserTest =
-  describe "OBJ parser" $
-    context "Cube" $ do
+  describe "OBJ parser" $ do
+    context "Verts & faces only" $ do
       let model = getModel cube
       it "Tokens number" $
         length model `shouldBe` 14
       it "Vertex" $
         head model `shouldBe` Vertex 0 2 2
       it "Face" $
-        last model `shouldBe` Face [2, 6, 7, 3]
+        last model `shouldBe` Face [2, 6, 7, 3] []
+    context "Verts & faces & textures" $ do
+      let model = getModel quad
+      it "Tokens number" $
+        length model `shouldBe` 11
+      it "Object tag" $
+        head model `shouldBe` Object "Cube_Cube.001"
+      it "Face with versts and texture coords" $
+        last model `shouldBe` Face [2, 4, 1] [1, 4, 2]

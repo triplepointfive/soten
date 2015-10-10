@@ -12,5 +12,5 @@ data Token
     -- | Specifies a user-defined object name.
     | Object !String
     -- | Specifies a face element and its vertex reference number.
-    | Face ![Int]
+    | Face ![Int] ![Int]
     deriving (Eq, Show)
