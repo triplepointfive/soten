@@ -10,7 +10,7 @@
 -- normals for all imported faces.
 --
 --------------------------------------------------------------------
-module Codec.Soten.PostProcess.GenNormals (
+module Codec.Soten.PostProcess.GenFaceNormals (
     apply
 ) where
 

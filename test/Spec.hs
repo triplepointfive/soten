@@ -16,7 +16,7 @@ import Codec.Soten.PostProcess.ConvertToLHTest
 import Codec.Soten.PostProcess.FixInfacingNormalsTest
 import Codec.Soten.PostProcess.FlipUVsTest
 import Codec.Soten.PostProcess.FlipWindingOrderTest
-import Codec.Soten.PostProcess.GenNormalsTest
+import Codec.Soten.PostProcess.GenFaceNormalsTest
 import Codec.Soten.PostProcess.TriangulateTest
 
 main :: IO ()
@@ -33,7 +33,7 @@ main = hspec $ do
   fixInfacingNormalsTest
   flipUVsTest
   flipWindingOrderTest
-  genNormalsTest
+  genFaceNormalsTest
   triangulateTest
 
   describe "Importer" $ do

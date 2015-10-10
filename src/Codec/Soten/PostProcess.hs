@@ -13,6 +13,7 @@ import Codec.Soten.PostProcess.FlipWindingOrder   as FlipWindingOrder
 import Codec.Soten.PostProcess.Triangulate        as Triangulate
 import Codec.Soten.PostProcess.FixInfacingNormals as FixInfacingNormals
 import Codec.Soten.PostProcess.FlipUVs            as FlipUVs
+import Codec.Soten.PostProcess.GenFaceNormals     as GenFaceNormals
 import Codec.Soten.Scene
 
 -- | Flags for possible post processing steps.
@@ -30,9 +31,9 @@ data PostProcessStep
       -- light sources, cameras, textures, vertex components).
     | RemoveComponent
       -- | Generates normals for all faces of all meshes.
-    | GenNormals
+    | GenFaceNormals
       -- | Generates smooth normals for all vertices in the mesh.
-    | GenSmoothNormals
+    | GenVertexNormals
       -- | Splits large meshes into smaller sub-meshes.
     | SplitLargeMeshes
       -- | Removes the node graph and pre-transforms all vertices with
@@ -92,6 +93,7 @@ applyPostProcess scene FlipWindingOrder = FlipWindingOrder.apply scene
 applyPostProcess scene Triangulate = Triangulate.apply scene
 applyPostProcess scene FixInfacingNormals = FixInfacingNormals.apply scene
 applyPostProcess scene FlipUVs = FlipUVs.apply scene
+applyPostProcess scene GenFaceNormals = GenFaceNormals.apply scene
 applyPostProcess scene _ = scene
 
 -- | Shortcut flag for Direct3D-based applications.
@@ -107,7 +109,7 @@ convertToLeftHanded =
 targetRealtimeFast :: [PostProcessStep]
 targetRealtimeFast =
     [ CalcTangentSpace
-    , GenNormals
+    , GenFaceNormals
     , JoinIdenticalVertices
     , Triangulate
     , GenUVCoords
@@ -119,7 +121,7 @@ targetRealtimeFast =
 targetRealtimeQuality :: [PostProcessStep]
 targetRealtimeQuality =
     [ CalcTangentSpace
-    , GenSmoothNormals
+    , GenVertexNormals
     , JoinIdenticalVertices
     , ImproveCacheLocality
     , LimitBoneWeights

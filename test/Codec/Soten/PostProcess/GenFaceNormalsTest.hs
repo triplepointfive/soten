@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Codec.Soten.PostProcess.GenNormalsTest where
+module Codec.Soten.PostProcess.GenFaceNormalsTest where
 
 import Test.Hspec
 
@@ -7,7 +7,7 @@ import Control.Lens ((&), (^.), (.~))
 import qualified Data.Vector as V
 import Linear
 
-import Codec.Soten.PostProcess.GenNormals
+import Codec.Soten.PostProcess.GenFaceNormals
 import Codec.Soten.Scene
 import Codec.Soten.Scene.Mesh
 
@@ -17,8 +17,8 @@ scene mesh = newScene & sceneMeshes .~ V.singleton mesh
 isDummyNormal :: V3 Float -> Bool
 isDummyNormal (V3 x y z) = all isNaN [x, y, z]
 
-genNormalsTest :: Spec
-genNormalsTest = do
+genFaceNormalsTest :: Spec
+genFaceNormalsTest = do
   describe "Generate normals post process" $ do
     context "Ignores mesh" $ do
       it "With normals" $ do

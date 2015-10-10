@@ -34,7 +34,7 @@ library
         Codec.Soten.PostProcess.FixInfacingNormals
         Codec.Soten.PostProcess.FlipUVs
         Codec.Soten.PostProcess.FlipWindingOrder
-        Codec.Soten.PostProcess.GenNormals
+        Codec.Soten.PostProcess.GenFaceNormals
         Codec.Soten.PostProcess.Triangulate
         Codec.Soten.Scene.Anim
         Codec.Soten.Scene.Camera
