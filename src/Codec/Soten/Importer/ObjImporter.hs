@@ -29,6 +29,8 @@ import           Codec.Soten.Scene.Mesh
                  , meshName
                  , meshTextureCoords
                  , meshFaces
+                 , meshPrimitiveTypes
+                 , PrimitiveType(..)
                  )
 import qualified Codec.Soten.Scene.Mesh as S
 import           Codec.Soten.Util
@@ -87,7 +89,15 @@ addVert x y z = meshVertices %~ \v -> v `V.snoc` V3 x y z
 -- | Adds a face to mesh. TODO: Order doesn't match: vertex might be connected
 -- with another texture coordinate!
 addFace :: [Int] -> [Int] -> Mesh -> Mesh
-addFace verts _ = meshFaces %~ \v -> v `V.snoc` S.Face (V.fromList $ map pred verts)
+addFace verts _ mesh = mesh
+    & meshFaces          %~ (`V.snoc` S.Face (V.fromList $ map pred verts))
+    & meshPrimitiveTypes %~ (`V.snoc` primitiveType)
+  where
+    primitiveType = case length verts of
+        1 -> PrimitivePoint
+        2 -> PrimitiveLine
+        3 -> PrimitiveTriangle
+        _ -> PrimitivePolygone
 
 -- | Adds texture coordinates to mesh.
 addTexture :: Float -> Float -> Mesh -> Mesh
