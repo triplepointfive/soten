@@ -7,6 +7,7 @@ import Data.IORef
 import System.Exit
 
 import qualified Graphics.UI.Gtk as Gtk
+import qualified Graphics.UI.Gtk.Gdk.Events as Gtk
 import Graphics.UI.Gtk (AttrOp((:=)))
 import qualified Graphics.UI.Gtk.OpenGL as GtkGL
 
@@ -22,122 +23,111 @@ data BoundingBox =
     , sceneCenter :: !(V3 Float)
     } deriving Show
 
---
 fieldOfView = 45.0
-
 animationWaitTime = 3
 
 main :: IO ()
 main = do
-  Gtk.initGUI
+    Gtk.initGUI
 
-  -- Initialise the Gtk+ OpenGL extension
-  -- (including reading various command line parameters)
-  GtkGL.initGL
+    -- Initialise the Gtk+ OpenGL extension
+    -- (including reading various command line parameters)
+    GtkGL.initGL
 
-  -- We need a OpenGL frame buffer configuration to be able to create other
-  -- OpenGL objects.
-  glconfig <- GtkGL.glConfigNew [GtkGL.GLModeRGBA,
-                                 GtkGL.GLModeDepth,
-                                 GtkGL.GLModeDouble]
+    -- We need a OpenGL frame buffer configuration to be able to create other
+    -- OpenGL objects.
+    glconfig <- GtkGL.glConfigNew [GtkGL.GLModeRGBA,
+                                   GtkGL.GLModeDepth,
+                                   GtkGL.GLModeDouble]
 
-  -- Create an OpenGL drawing area widget
-  canvas <- GtkGL.glDrawingAreaNew glconfig
+    -- Create an OpenGL drawing area widget
+    canvas <- GtkGL.glDrawingAreaNew glconfig
 
-  Gtk.widgetSetSizeRequest canvas 250 250
+    Gtk.widgetSetSizeRequest canvas 250 250
 
-  -- Initialise some GL setting just before the canvas first gets shown
-  -- (We can't initialise these things earlier since the GL resources that
-  -- we are using wouldn't heve been setup yet)
-  Gtk.onRealize canvas $ GtkGL.withGLDrawingArea canvas $ \ window -> do
-    (width, height) <- GtkGL.glDrawableGetSize window
-    let aspectRatio = fromIntegral width / fromIntegral height
+    -- Initialise some GL setting just before the canvas first gets shown
+    -- (We can't initialise these things earlier since the GL resources that
+    -- we are using wouldn't heve been setup yet)
+    Gtk.onRealize canvas $ GtkGL.withGLDrawingArea canvas $ \ window -> do
+        (width, height) <- GtkGL.glDrawableGetSize window
+        reshape width height
+        depthFunc $= Just Less
+        drawBuffer $= BackBuffers
 
+    Gtk.onConfigure canvas $ \ (Gtk.Configure _ _ _ width height) ->
+        reshape width height
+
+    -- model <- readModelFile "../models/stl/block_ascii.stl"
+    model <- readModelFile "../models/md2/phoenix_ugv.md2"
+    case model of
+        Right scene -> do
+            clearColor         $= Color4 0.1 0.1 0.1 1
+            lighting           $= Enabled
+            light (GL.Light 0) $= Enabled -- Uses default lighting parameters.
+            depthFunc          $= Just Lequal
+            lightModelTwoSide  $= Enabled
+            GL.normalize       $= Enabled
+            colorMaterial      $= Just (FrontAndBack, Diffuse)
+
+            -- elapsedTime
+
+            sceneRef <- newIORef scene
+            angleRef <- newIORef 45.0
+            -- idleCallback    $= Just (idle angleRef)
+            -- displayCallback $=
+
+
+            -- Set the repaint handler
+            Gtk.onExpose canvas $ \_ -> do
+              GtkGL.withGLDrawingArea canvas $ \glwindow -> do
+                GL.clear [GL.DepthBuffer, GL.ColorBuffer]
+                display angleRef sceneRef (boundingBox scene)
+                GtkGL.glDrawableSwapBuffers glwindow
+              return True
+
+            -- Setup the animation
+            Gtk.timeoutAddFull (do
+                Gtk.widgetQueueDraw canvas
+                angleRef $~! (+ 1.01)
+                return True)
+              Gtk.priorityDefaultIdle animationWaitTime
+
+            --------------------------------
+            -- Setup the rest of the GUI:
+            --
+            window <- Gtk.windowNew
+            Gtk.onDestroy window Gtk.mainQuit
+            Gtk.set window [ Gtk.containerBorderWidth := 8,
+                             Gtk.windowTitle := "3D models viewer" ]
+
+            vbox <- Gtk.vBoxNew False 4
+            Gtk.set window [ Gtk.containerChild := vbox ]
+
+            label <- Gtk.labelNew (Just "Gtk2Hs using OpenGL via HOpenGL!")
+            button <- Gtk.buttonNewWithLabel "Close"
+            Gtk.onClicked button Gtk.mainQuit
+            Gtk.set vbox [ Gtk.containerChild := canvas,
+                           Gtk.containerChild := label,
+                           Gtk.containerChild := button ]
+
+            Gtk.widgetShowAll window
+            Gtk.mainGUI
+        Left msg -> putStrLn msg >> exitFailure
+
+reshape :: (Num a, Integral a) => a -> a -> IO Bool
+reshape width height = do
     clearColor $= Color4 0.0 0.0 0.0 0.0
     matrixMode $= Projection
     loadIdentity
     -- GL.ortho 0.0 1.0 0.0 1.0 (-1.0) 1.0
     GL.perspective fieldOfView aspectRatio 1.0 1000.0
     viewport $= (Position 0 0, Size (fromIntegral width) (fromIntegral height))
-    depthFunc $= Just Less
-    drawBuffer $= BackBuffers
+    return True
+  where
+    aspectRatio = fromIntegral width / fromIntegral height
 
-
-  -- model <- readModelFile "../models/stl/block_ascii.stl"
-  model <- readModelFile "../models/md2/phoenix_ugv.md2"
-  case model of
-      Right scene -> do
-          clearColor         $= Color4 0.1 0.1 0.1 1
-          lighting           $= Enabled
-          light (GL.Light 0) $= Enabled -- Uses default lighting parameters.
-          depthFunc          $= Just Lequal
-          lightModelTwoSide  $= Enabled
-          GL.normalize       $= Enabled
-          colorMaterial      $= Just (FrontAndBack, Diffuse)
-
-          -- elapsedTime
-
-          sceneRef <- newIORef scene
-          angleRef <- newIORef 45.0
-          -- idleCallback    $= Just (idle angleRef)
-          -- displayCallback $=
-
-
-          -- Set the repaint handler
-          Gtk.onExpose canvas $ \_ -> do
-            GtkGL.withGLDrawingArea canvas $ \glwindow -> do
-              GL.clear [GL.DepthBuffer, GL.ColorBuffer]
-              -- display
-              display' angleRef sceneRef (boundingBox scene)
-              GtkGL.glDrawableSwapBuffers glwindow
-            return True
-
-          -- Setup the animation
-          Gtk.timeoutAddFull (do
-              Gtk.widgetQueueDraw canvas
-              angleRef $~! (+ 1.01)
-              return True)
-            Gtk.priorityDefaultIdle animationWaitTime
-
-          --------------------------------
-          -- Setup the rest of the GUI:
-          --
-          window <- Gtk.windowNew
-          Gtk.onDestroy window Gtk.mainQuit
-          Gtk.set window [ Gtk.containerBorderWidth := 8,
-                           Gtk.windowTitle := "3D models viewer" ]
-
-          vbox <- Gtk.vBoxNew False 4
-          Gtk.set window [ Gtk.containerChild := vbox ]
-
-          label <- Gtk.labelNew (Just "Gtk2Hs using OpenGL via HOpenGL!")
-          button <- Gtk.buttonNewWithLabel "Close"
-          Gtk.onClicked button Gtk.mainQuit
-          Gtk.set vbox [ Gtk.containerChild := canvas,
-                         Gtk.containerChild := label,
-                         Gtk.containerChild := button ]
-
-          Gtk.widgetShowAll window
-          Gtk.mainGUI
-      Left msg -> do
-          putStrLn msg
-          exitFailure
-
-
--- Draw the OpenGL polygon.
-display :: IO ()
-display = do
-  loadIdentity
-  color (Color3 1 1 1 :: Color3 GLfloat)
-  -- Instead of glBegin ... glEnd there is renderPrimitive.
-  renderPrimitive Polygon $ do
-    vertex (Vertex3 0.25 0.25 0.0 :: Vertex3 GLfloat)
-    vertex (Vertex3 0.75 0.25 0.0 :: Vertex3 GLfloat)
-    vertex (Vertex3 0.75 0.75 0.0 :: Vertex3 GLfloat)
-    vertex (Vertex3 0.25 0.75 0.0 :: Vertex3 GLfloat)
-
-display' :: IORef GLfloat -> IORef Scene -> BoundingBox -> IO ()
-display' angleRef sceneRef BoundingBox{..} = do
+display :: IORef GLfloat -> IORef Scene -> BoundingBox -> IO ()
+display angleRef sceneRef BoundingBox{..} = do
     matrixMode $= Modelview 0
     loadIdentity
     GL.lookAt (Vertex3 0 0 3) (Vertex3 0 0 (-5)) (Vector3 0 1 0)
