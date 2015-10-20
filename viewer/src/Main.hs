@@ -24,21 +24,12 @@ animationWaitTime = 3
 main :: IO ()
 main = do
     Gtk.initGUI
-
-    -- Initialise the Gtk+ OpenGL extension
-    -- (including reading various command line parameters)
     GtkGL.initGL
-
-    -- We need a OpenGL frame buffer configuration to be able to create other
-    -- OpenGL objects.
     glconfig <- GtkGL.glConfigNew [GtkGL.GLModeRGBA,
                                    GtkGL.GLModeDepth,
                                    GtkGL.GLModeDouble]
-
-    -- Create an OpenGL drawing area widget
     canvas <- GtkGL.glDrawingAreaNew glconfig
-
-    Gtk.widgetSetSizeRequest canvas 250 250
+    Gtk.widgetSetSizeRequest canvas 500 500
 
     -- Initialise some GL setting just before the canvas first gets shown
     -- (We can't initialise these things earlier since the GL resources that
@@ -64,12 +55,8 @@ main = do
             GL.normalize       $= Enabled
             colorMaterial      $= Just (FrontAndBack, Diffuse)
 
-            -- elapsedTime
-
             sceneRef <- newIORef scene
             angleRef <- newIORef 45.0
-            -- idleCallback    $= Just (idle angleRef)
-            -- displayCallback $=
 
 
             -- Set the repaint handler
@@ -95,15 +82,29 @@ main = do
             Gtk.set window [ Gtk.containerBorderWidth := 8,
                              Gtk.windowTitle := "3D models viewer" ]
 
+
+            -- label <- Gtk.labelNew (Just "Gtk2Hs using OpenGL via HOpenGL!")
+            -- button <- Gtk.buttonNewWithLabel "Close"
+            -- Gtk.onClicked button Gtk.mainQuit
             vbox <- Gtk.vBoxNew False 4
             Gtk.set window [ Gtk.containerChild := vbox ]
 
-            label <- Gtk.labelNew (Just "Gtk2Hs using OpenGL via HOpenGL!")
-            button <- Gtk.buttonNewWithLabel "Close"
-            Gtk.onClicked button Gtk.mainQuit
-            Gtk.set vbox [ Gtk.containerChild := canvas,
-                           Gtk.containerChild := label,
-                           Gtk.containerChild := button ]
+
+            statusbar <- Gtk.statusbarNew
+            cID <- Gtk.statusbarGetContextId statusbar ""
+            Gtk.statusbarPush statusbar cID "Hello"
+
+            panel <- Gtk.vBoxNew False 4
+
+            hbox <- Gtk.hBoxNew False 4
+
+            Gtk.set hbox [ Gtk.containerChild := canvas, Gtk.containerChild := panel ]
+
+            -- Gtk.containerAdd window menu
+            Gtk.set vbox [ -- Gtk.containerChild := menu,
+                           Gtk.containerChild := hbox,
+                           Gtk.containerChild := statusbar ]
+                           -- Gtk.containerChild := button ]
 
             Gtk.widgetShowAll window
             Gtk.mainGUI
