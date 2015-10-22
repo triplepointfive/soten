@@ -5,6 +5,7 @@
 module Codec.Soten.Parser.ObjParser (
       getModel
 ) where
+
 import           Control.Monad (void)
 
 import           Text.Parsec
@@ -20,17 +21,28 @@ type Parser = Parsec String ()
 
 -- | Parses obj file content into a model.
 getModel :: String -> Model
-getModel = validate . parse model ""
+getModel = modelize . validate . parse modelTokens ""
+
+-- | Transforms a set of tokens into intermediate model object.
+modelize :: [Token] -> Model
+modelize = foldl modifyModel newModel
+
+-- | Modifies a model with a single given token.
+modifyModel :: Model -> Token -> Model
+modifyModel model (Vertex x y z) = addVertex model (x, y, z)
+modifyModel model (VertexTexture u v) = addTextureCoord model (u, v)
+modifyModel model (Face v t) = addFace model (v, t)
+modifyModel model (Object name) = model { objName = name }
 
 -- | Returns model or fails with well-known 'DeadlyImporterError'.
-validate :: Either ParseError Model -> Model
+validate :: Either ParseError [Token] -> [Token]
 validate (Right m) = m
 validate (Left e) = throw $ DeadlyImporterError $
     "Failed to parse OBJ model: " ++ show e
 
 -- | A parser for all implemented tokens.
-model :: Parser [Token]
-model = many $ choice $ map try availableTags
+modelTokens :: Parser [Token]
+modelTokens = many $ choice $ map try availableTags
 
 -- | A list of supported tags parsers.  availableTags :: [Parser Token]
 availableTags :: [Parser Token]
