@@ -1,6 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 module Codec.Soten.Data.ObjData where
 
+import Linear
 import qualified Data.Vector as V
 
 -- | All parseble tokens.
@@ -18,8 +19,8 @@ data Token
 -- | A parsed model representation.
 data Model = Model
     { faces     :: !(V.Vector ([Int], [Int]))
-    , vertsAcc  :: !(V.Vector (Float, Float, Float))
-    , texstsAcc :: !(V.Vector (Float, Float))
+    , vertsAcc  :: !(V.Vector (V3 Float))
+    , texstsAcc :: !(V.Vector (V3 Float))
     , objName   :: !String
     } deriving (Eq, Show)
 
@@ -34,12 +35,13 @@ newModel = Model
 
 -- | Adds a single vertex to the end of vertices list.
 addVertex :: Model -> (Float, Float, Float) -> Model
-addVertex m@Model{..} v = m { vertsAcc = vertsAcc `V.snoc` v }
+addVertex m@Model{..} (x, y, z) = m { vertsAcc = vertsAcc `V.snoc` V3 x y z }
 
 -- | Adds a single texture coordinate to the end of a list.
 addTextureCoord :: Model -> (Float, Float) -> Model
-addTextureCoord m@Model{..} t = m { texstsAcc = texstsAcc `V.snoc` t }
+addTextureCoord m@Model{..} (u, v) = m { texstsAcc = texstsAcc `V.snoc` V3 u v 0 }
 
 -- | Adds a single face to the end of faces list.
 addFace :: Model -> ([Int], [Int]) -> Model
-addFace m@Model{..} f = m { faces = faces `V.snoc` f }
+addFace m@Model{..} (vs, ts) =
+    m { faces = faces `V.snoc` (map pred vs, map pred ts) }

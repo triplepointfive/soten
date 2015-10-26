@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 module Codec.Soten.Importer.ObjImporter (
     ObjImporter(..)
 ) where
@@ -5,12 +6,11 @@ module Codec.Soten.Importer.ObjImporter (
 import           Control.Monad (when)
 import           System.Posix (getFileStatus, fileSize)
 
-import           Control.Lens ((^.), (&), (%~), (.~), Lens', lens)
+import           Control.Lens ((&), (%~), (.~), (^.))
 import qualified Data.Vector as V
-import           Linear (V3(..))
 
 import           Codec.Soten.Parser.ObjParser (getModel)
-import           Codec.Soten.Data.ObjData as Obj
+import           Codec.Soten.Data.ObjData (Model(..))
 import           Codec.Soten.BaseImporter
                  ( BaseImporter(..)
                  , searchFileHeaderForToken
@@ -63,42 +63,33 @@ internalReadFile filePath = do
 
 -- | Folds a list of tokens ('Model') into a 'Scene' object.
 createDataFromImport :: Model -> IO (Either String Scene)
-createDataFromImport model = return (Right (foldl addToken baseScene model))
+createDataFromImport model = return (Right baseScene)
   where
     baseScene = newScene
-        & sceneMeshes   .~ V.singleton newMesh
+        & sceneMeshes   .~ V.singleton (addMeshFaces newMesh model)
         & sceneRootNode %~ nodeMeshes .~ V.singleton 0
 
--- | Applies a single token to a scene.
-addToken :: Scene -> Token -> Scene
-addToken scene (Vertex x y z)      = scene & currentMesh %~ addVert x y z
-addToken scene (VertexTexture u v) = scene & currentMesh %~ addTexture u v
-addToken scene (Face verts texts)  = scene & currentMesh %~ addFace verts texts
-addToken scene (Object name)       = scene & currentMesh %~ meshName .~ name
+-- | Adds faces into a mesh.
+addMeshFaces :: Mesh -> Model -> Mesh
+addMeshFaces mesh model = V.foldl (addFace model) mesh (faces model)
 
--- | A lens, that assumes we have only single mesh.
-currentMesh :: Lens' Scene Mesh
-currentMesh = lens
-    (\ scene -> V.head (scene ^. sceneMeshes))
-    (\ scene mesh -> scene & sceneMeshes .~ V.singleton mesh)
-
--- | Adds a vertex to mesh.
-addVert :: Float -> Float -> Float -> Mesh -> Mesh
-addVert x y z = meshVertices %~ \v -> v `V.snoc` V3 x y z
-
--- | Adds a face to mesh. TODO: Order doesn't match: vertex might be connected
--- with another texture coordinate!
-addFace :: [Int] -> [Int] -> Mesh -> Mesh
-addFace verts _ mesh = mesh
-    & meshFaces          %~ (`V.snoc` S.Face (V.fromList $ map pred verts))
+-- | Adds a face to mesh.
+addFace :: Model -> Mesh -> ([Int], [Int]) -> Mesh
+addFace Model{..} mesh (verts, texts) = mesh
+    & meshFaces          %~ (`V.snoc` S.Face (V.fromList indices))
     & meshPrimitiveTypes %~ (`V.snoc` primitiveType)
+    & meshVertices       %~ (\ v -> v V.++ faceData vertsAcc verts)
+    & meshTextureCoords  %~ (\ v -> v V.++ faceData texstsAcc texts)
+    & meshName           .~ objName
   where
+    lastVertIndex = V.length (mesh ^. meshVertices)
+    indices = take (length verts) $ iterate succ lastVertIndex
     primitiveType = case length verts of
         1 -> PrimitivePoint
         2 -> PrimitiveLine
         3 -> PrimitiveTriangle
         _ -> PrimitivePolygone
 
--- | Adds texture coordinates to mesh.
-addTexture :: Float -> Float -> Mesh -> Mesh
-addTexture u v = meshTextureCoords %~ \vec -> vec `V.snoc` V3 u v 0
+-- | Loads a list of objects from a model with indices from a face.
+faceData :: V.Vector a -> [Int] -> V.Vector a
+faceData verts = V.map (\i -> verts V.! i) . V.fromList
