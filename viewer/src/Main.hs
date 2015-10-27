@@ -5,6 +5,7 @@ import Control.Monad
 import Data.Maybe
 import Data.IORef
 import System.Exit
+import System.Environment
 
 import qualified Data.Vector as V
 import qualified Graphics.UI.Gtk as Gtk
@@ -23,6 +24,7 @@ animationWaitTime = 3
 
 main :: IO ()
 main = do
+    (filename:_) <- getArgs
     Gtk.initGUI
     GtkGL.initGL
     glconfig <- GtkGL.glConfigNew [GtkGL.GLModeRGBA,
@@ -43,8 +45,7 @@ main = do
     Gtk.onConfigure canvas $ \ (Gtk.Configure _ _ _ width height) ->
         reshape width height
 
-    -- model <- readModelFile "../models/stl/block_ascii.stl"
-    model <- readModelFile "../models/md2/phoenix_ugv.md2"
+    model <- readModelFile filename
     case model of
         Right scene -> do
             clearColor         $= Color4 0.1 0.1 0.1 1
