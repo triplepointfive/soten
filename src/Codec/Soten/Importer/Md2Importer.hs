@@ -39,6 +39,7 @@ import           Codec.Soten.Scene.Mesh
                  , meshVertices
                  , meshNormals
                  , meshFaces
+                 , meshMaterialIndex
                  )
 import           Codec.Soten.Scene
                  ( Scene(..)
@@ -103,6 +104,7 @@ transformModel Model{..} = newScene
         & meshVertices       .~ V.fromList (map fst vertsAndNorms)
         & meshNormals        .~ V.fromList (map snd vertsAndNorms)
         & meshFaces          .~ V.fromList faces
+        & meshMaterialIndex  .~ Just 0
 
     -- TODO: Fail if verts count is not a mod of 3.
     faces = map (\ i -> Face (V.fromList [3 * i, 3 * i + 1, 3 * i + 2 ]))
