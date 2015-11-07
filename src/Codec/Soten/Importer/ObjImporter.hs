@@ -26,6 +26,7 @@ import           Codec.Soten.Scene.Mesh
                  ( Mesh(..)
                  , newMesh
                  , meshVertices
+                 , meshNormals
                  , meshName
                  , meshTextureCoords
                  , meshFaces
@@ -74,11 +75,12 @@ addMeshFaces :: Mesh -> Model -> Mesh
 addMeshFaces mesh model = V.foldl (addFace model) mesh (faces model)
 
 -- | Adds a face to mesh.
-addFace :: Model -> Mesh -> ([Int], [Int]) -> Mesh
-addFace Model{..} mesh (verts, texts) = mesh
+addFace :: Model -> Mesh -> ([Int], [Int], [Int]) -> Mesh
+addFace Model{..} mesh (verts, texts, normals) = mesh
     & meshFaces          %~ (`V.snoc` S.Face (V.fromList indices))
     & meshPrimitiveTypes %~ (`V.snoc` primitiveType)
     & meshVertices       %~ (\ v -> v V.++ faceData vertsAcc verts)
+    & meshNormals        %~ (\ v -> v V.++ faceData normAcc normals)
     & meshTextureCoords  %~ (\ v -> v V.++ faceData texstsAcc texts)
     & meshName           .~ objName
   where

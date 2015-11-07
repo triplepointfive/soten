@@ -42,22 +42,40 @@ cube = unlines
     , "f 2 6 7 3"
     ]
 
+sphere = unlines
+    [ "mtllib sphere.mtl"
+    , "vn 0.098012 -0.995138 -0.009653"
+    , "vn 0.290166 -0.956550 -0.028578"
+    , "vn 0.470890 -0.880972 -0.046377"
+    , "f 32//1 2//1 482//1"
+    , "f 482//2 2//2 3//2"
+    , "f 482//2 3//2 481//2"
+    ]
+
 objParserTest :: Spec
 objParserTest =
   describe "OBJ parser" $ do
     context "Verts & faces only" $ do
-      let model = getModel cube
+      let Right tokens = tokenize cube
       it "Tokens number" $
-        length model `shouldBe` 14
+        length tokens `shouldBe` 14
       it "Vertex" $
-        head model `shouldBe` Vertex 0 2 2
+        head tokens `shouldBe` Vertex 0 2 2
       it "Face" $
-        last model `shouldBe` Face [2, 6, 7, 3] []
+        last tokens `shouldBe` Face [2, 6, 7, 3] [] []
     context "Verts & faces & textures" $ do
-      let model = getModel quad
+      let Right tokens = tokenize quad
       it "Tokens number" $
-        length model `shouldBe` 11
+        length tokens `shouldBe` 11
       it "Object tag" $
-        head model `shouldBe` Object "Cube_Cube.001"
+        head tokens `shouldBe` Object "Cube_Cube.001"
       it "Face with versts and texture coords" $
-        last model `shouldBe` Face [2, 4, 1] [1, 4, 2]
+        last tokens `shouldBe` Face [2, 4, 1] [1, 4, 2] []
+    context "Normals & faces" $ do
+      let Right tokens = tokenize sphere
+      it "Tokens number" $
+        length tokens `shouldBe` 6
+      it "Vertex normal tag" $
+        head tokens `shouldBe` Normal 0.098012 (-0.995138) (-0.009653)
+      it "Face tag without texture coordinates" $
+        last tokens `shouldBe` Face [482, 3, 481] [] [2, 2, 2]

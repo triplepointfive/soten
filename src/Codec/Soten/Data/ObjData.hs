@@ -10,17 +10,20 @@ data Token
     = Vertex !Float !Float !Float
     -- | Specifies a texture vertex and its coordinates.
     | VertexTexture !Float !Float
+    -- | Specifies a vertex normals coordinates.
+    | Normal !Float !Float !Float
     -- | Specifies a user-defined object name.
     | Object !String
     -- | Specifies a face element and its vertex reference number.
-    | Face ![Int] ![Int]
+    | Face ![Int] ![Int] ![Int]
     deriving (Eq, Show)
 
 -- | A parsed model representation.
 data Model = Model
-    { faces     :: !(V.Vector ([Int], [Int]))
+    { faces     :: !(V.Vector ([Int], [Int], [Int]))
     , vertsAcc  :: !(V.Vector (V3 Float))
     , texstsAcc :: !(V.Vector (V3 Float))
+    , normAcc   :: !(V.Vector (V3 Float))
     , objName   :: !String
     } deriving (Eq, Show)
 
@@ -30,6 +33,7 @@ newModel = Model
     { faces     = V.empty
     , vertsAcc  = V.empty
     , texstsAcc = V.empty
+    , normAcc   = V.empty
     , objName   = ""
     }
 
@@ -37,11 +41,15 @@ newModel = Model
 addVertex :: Model -> (Float, Float, Float) -> Model
 addVertex m@Model{..} (x, y, z) = m { vertsAcc = vertsAcc `V.snoc` V3 x y z }
 
+-- | Adds a single normal vector to the end of normals list.
+addNormal :: Model -> (Float, Float, Float) -> Model
+addNormal m@Model{..} (x, y, z) = m { normAcc = normAcc `V.snoc` V3 x y z}
+
 -- | Adds a single texture coordinate to the end of a list.
 addTextureCoord :: Model -> (Float, Float) -> Model
 addTextureCoord m@Model{..} (u, v) = m { texstsAcc = texstsAcc `V.snoc` V3 u v 0 }
 
 -- | Adds a single face to the end of faces list.
-addFace :: Model -> ([Int], [Int]) -> Model
-addFace m@Model{..} (vs, ts) =
-    m { faces = faces `V.snoc` (map pred vs, map pred ts) }
+addFace :: Model -> ([Int], [Int], [Int]) -> Model
+addFace m@Model{..} (vs, ts, ns) =
+    m { faces = faces `V.snoc` (map pred vs, map pred ts, map pred ns) }

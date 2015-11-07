@@ -4,6 +4,7 @@
  -}
 module Codec.Soten.Parser.ObjParser (
       getModel
+    , tokenize
 ) where
 
 import           Control.Monad (void)
@@ -21,7 +22,11 @@ type Parser = Parsec String ()
 
 -- | Parses obj file content into a model.
 getModel :: String -> Model
-getModel = modelize . validate . parse modelTokens ""
+getModel = modelize . validate . tokenize
+
+-- | Reads filecontent and splits it in tokens.
+tokenize :: String -> Either ParseError [Token]
+tokenize = parse modelTokens ""
 
 -- | Transforms a set of tokens into intermediate model object.
 modelize :: [Token] -> Model
@@ -31,7 +36,8 @@ modelize = foldl modifyModel newModel
 modifyModel :: Model -> Token -> Model
 modifyModel model (Vertex x y z) = addVertex model (x, y, z)
 modifyModel model (VertexTexture u v) = addTextureCoord model (u, v)
-modifyModel model (Face v t) = addFace model (v, t)
+modifyModel model (Normal x y z) = addNormal model (x, y, z)
+modifyModel model (Face v t n) = addFace model (v, t, n)
 modifyModel model (Object name) = model { objName = name }
 
 -- | Returns model or fails with well-known 'DeadlyImporterError'.
@@ -48,12 +54,16 @@ modelTokens = many $ choice $ map try availableTags
 availableTags :: [Parser Token]
 availableTags = special ++ map lexeme lexemed
   where
-    lexemed = [vertexTexture, vertex, face]
+    lexemed = [normal, vertexTexture, vertex, face]
     special = [lexemePrefix *> object]
 
 -- | Parses `v` tag.
 vertex :: Parser Token
 vertex = char 'v' >> Vertex <$> floatS <*> floatS <*> floatS -- <*> option 1 floatS
+
+-- | Parses `vn` tag.
+normal :: Parser Token
+normal = string "vn" >> Normal <$> floatS <*> floatS <*> floatS -- <*> option 1 floatS
 
 -- | Parses `vt` tag.
 vertexTexture :: Parser Token
@@ -65,13 +75,25 @@ object = char 'o' *> whitespace *> (Object <$> manyTill anyChar newline)
 
 -- | Parses `f` tag.
 face :: Parser Token
-face = char 'f' *> choice [try vertsAndTextures, try verts]
+face = char 'f' *> choice
+    [try vertsAndNormals, try vertsAndTextures, try verts]
   where
     verts, vertsAndTextures :: Parser Token
-    verts = Face <$> many1 intS <*> return []
+    verts = Face <$> many1 intS <*> return [] <*> return []
     vertsAndTextures = do
       vsATX <- many1 numWithSeparator
-      return (Face (map fst vsATX) (map snd vsATX))
+      return (Face (map fst vsATX) (map snd vsATX) [])
+    vertsAndNormals = do
+      vsANs <- many1 numWithDSeparator
+      return (Face (map fst vsANs) [] (map snd vsANs))
+
+-- | Parses an expression matching pattern d//d.
+numWithDSeparator :: Parser (Int, Int)
+numWithDSeparator = whitespace *> do
+    a <- num
+    void $ string "//"
+    b <- num
+    return (a, b)
 
 -- | Parses an expression matching pattern d/d.
 numWithSeparator :: Parser (Int, Int)
@@ -111,7 +133,7 @@ ignoreTags = choice $ map (*> (whitespace *> eol)) unsupported
 
 -- | A list of unsupported tags parsers.
 unsupported :: [Parser ()]
-unsupported = [void (string "usemtl"), void (oneOf "s")]
+unsupported = [void (string "usemtl"), void (string "mtllib"), void (oneOf "s")]
 
 -- | A helper to ignore comments.
 lexeme :: Parser a -> Parser a
