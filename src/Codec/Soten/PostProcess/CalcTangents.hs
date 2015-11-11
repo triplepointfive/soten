@@ -12,6 +12,8 @@ import           Codec.Soten.Scene
 import           Codec.Soten.Scene.Mesh
 import           Codec.Soten.Util (degToRad)
 
+type VecVec = V.Vector (V3 Float)
+
 maxAngle = degToRad 45
 sourceUV = 0
 angleEpsilon = 0.9999
@@ -34,13 +36,22 @@ processMesh mesh
       && PrimitivePolygone `V.notElem` (mesh ^. meshPrimitiveTypes) = mesh
     -- Mesh must have normals.
     | not (hasNormals mesh) = mesh
-    | otherwise =  undefined
+    | otherwise = mesh
+        & meshTangents   .~ V.map normalize tangents
+        & meshBitangents .~ V.map normalize bitangents
   where
     meshPos = mesh ^. meshVertices
     meshNorm = mesh ^. meshNormals
     meshTex = mesh ^. meshTextureCoords
 
-    calcForFace :: Face -> (V.Vector (V3 Float), V.Vector (V3 Float))
+    emptyVec = V.replicate (V.length meshPos) (V3 0 0 0)
+    (tangents, bitangents) =
+        V.foldl updateGets (emptyVec, emptyVec) (mesh ^. meshFaces)
+
+    updateGets :: (VecVec, VecVec) -> Face -> (VecVec, VecVec)
+    updateGets gets face = undefined
+
+    calcForFace :: Face -> (VecVec, VecVec)
     calcForFace (Face indices)
         | numIndices < 3 = ( V.replicate numIndices vecNaN
                            , V.replicate numIndices vecNaN
@@ -52,8 +63,8 @@ processMesh mesh
         p1 = indices V.! 1
         p2 = indices V.! 2
         -- Position differences p1->p2 and p1->p3.
-        (V3 vx vy vz)  = (meshPos V.! p1) - (meshPos V.! p0)
-        (V3 wx wy wz)  = (meshPos V.! p2) - (meshPos V.! p0)
+        (V3 vx vy vz) = (meshPos V.! p1) - (meshPos V.! p0)
+        (V3 wx wy wz) = (meshPos V.! p2) - (meshPos V.! p0)
         -- Texture offset p1->p2 and p1->p3.
         (V3 sx sy _) = (meshTex V.! p1) - (meshTex V.! p0)
         (V3 tx ty _) = (meshTex V.! p2) - (meshTex V.! p0)
