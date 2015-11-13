@@ -10,17 +10,13 @@ import           Linear (V3(..), normalize, cross)
 
 import           Codec.Soten.Scene
 import           Codec.Soten.Scene.Mesh
-import           Codec.Soten.Util (degToRad)
 
 type VecVec = V.Vector (V3 Float)
-
-maxAngle = degToRad 45
-sourceUV = 0
-angleEpsilon = 0.9999
 
 getNaN :: Float
 getNaN = read "NaN"
 
+vecNaN :: V3 Float
 vecNaN = V3 getNaN getNaN getNaN
 
 -- | Executes the post processing step on the given imported data.
@@ -49,7 +45,10 @@ processMesh mesh
         V.foldl updateGets (emptyVec, emptyVec) (mesh ^. meshFaces)
 
     updateGets :: (VecVec, VecVec) -> Face -> (VecVec, VecVec)
-    updateGets gets (Face indices) = undefined
+    updateGets (tans, bitans) (Face indices) =
+        ( tans   `V.update` V.map (\(i, tas, _) -> (i, tas + tans   V.! i)) faceData
+        , bitans `V.update` V.map (\(i, _, bis) -> (i, bis + bitans V.! i)) faceData
+        )
       where
          -- | Returns a vector of index and related tangent + bitangent.
          faceData :: V.Vector (Int, V3 Float, V3 Float)

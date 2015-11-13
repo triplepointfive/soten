@@ -14,6 +14,7 @@ import Codec.Soten.PostProcess.Triangulate        as Triangulate
 import Codec.Soten.PostProcess.FixInfacingNormals as FixInfacingNormals
 import Codec.Soten.PostProcess.FlipUVs            as FlipUVs
 import Codec.Soten.PostProcess.GenFaceNormals     as GenFaceNormals
+import Codec.Soten.PostProcess.CalcTangents       as CalcTangents
 import Codec.Soten.Scene
 
 -- | Flags for possible post processing steps.
@@ -94,6 +95,7 @@ applyPostProcess scene Triangulate = Triangulate.apply scene
 applyPostProcess scene FixInfacingNormals = FixInfacingNormals.apply scene
 applyPostProcess scene FlipUVs = FlipUVs.apply scene
 applyPostProcess scene GenFaceNormals = GenFaceNormals.apply scene
+applyPostProcess scene CalcTangentSpace = CalcTangents.apply scene
 applyPostProcess scene _ = scene
 
 -- | Shortcut flag for Direct3D-based applications.
