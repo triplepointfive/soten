@@ -53,52 +53,39 @@ processMesh mesh
          -- | Returns a vector of index and related tangent + bitangent.
          faceData :: V.Vector (Int, V3 Float, V3 Float)
          faceData
-            | numIndices < 3 = V.map (\ i -> (i, vecNaN, vecNaN)) indices
-            | otherwise      = V.map (\ i -> let (t, bt) = vertexTangents i in (i, t, bt)) indices
+            | numIndices == 3 = V.map (\ i -> (i, tang,   bitang)) indices
+            | otherwise       = V.map (\ i -> (i, vecNaN, vecNaN)) indices
           where
             numIndices = V.length indices
             p0 = indices V.! 0
             p1 = indices V.! 1
             p2 = indices V.! 2
-            -- Position differences p1->p2 and p1->p3.
-            (V3 vx vy vz) = (meshPos V.! p1) - (meshPos V.! p0)
-            (V3 wx wy wz) = (meshPos V.! p2) - (meshPos V.! p0)
-            -- Texture offset p1->p2 and p1->p3.
-            (V3 sx sy _) = (meshTex V.! p1) - (meshTex V.! p0)
-            (V3 tx ty _) = (meshTex V.! p2) - (meshTex V.! p0)
-            dirCorrection = if tx * sy - ty * sx < 0 then -1 else 1
-            -- When t1, t2, t3 in same position in UV space, just use default UV
-            -- direction.
-            -- undefined
-            -- Tangent points in the direction where to positive X axis of the
-            -- texture coord's would point in model space bitangent's points
-            -- along the positive Y axis of the texture coord's, respectively.
-            tangent = (*dirCorrection) <$> V3
-                (wx * sy - vx * ty)
-                (wy * sy - vy * ty)
-                (wz * sy - vz * ty)
-            bitangent = (*dirCorrection) <$> V3
-                (wx * sx - vx * tx)
-                (wy * sx - vy * tx)
-                (wz * sx - vz * tx)
+            v0 = meshPos V.! p0
+            v1 = meshPos V.! p1
+            v2 = meshPos V.! p2
+            v0tex = meshTex V.! p0
+            v1tex = meshTex V.! p1
+            v2tex = meshTex V.! p2
 
-            vertexTangents :: Int -> (V3 Float, V3 Float)
-            vertexTangents idx
-                -- Reconstruct tangent/bitangent according to normal and
-                -- bitangent/tangent when it's infinite or NaN.
-                | validVector localTangent && not (validVector localBitangent) =
-                    (localTangent, localTangent `cross` norm)
-                | validVector localBitangent && not (validVector localTangent) =
-                    (norm `cross` localBitangent, localBitangent)
-                | otherwise = (localTangent, localBitangent)
+            -- | Calculates tangent and bitangent vectors for 3 given vertices.
+            -- (tang, bitang) :: (V3 Float, V3 Float)
+            (tang, bitang) = (V3 tx ty tz, V3 btx bty btz)
               where
-                norm = meshNorm V.! idx
-                -- Project tangent and bitangent into the plane formed by the
-                -- vertex' normal.
-                localTangent = normalize $ tangent -
-                    (norm `cross` (tangent `cross` norm))
-                localBitangent = normalize $ bitangent -
-                    (norm `cross` (bitangent `cross` norm))
+                (V3 edge1x edge1y edge1z) = v1 - v0
+                (V3 edge2x edge2y edge2z) = v2 - v0
+
+                (V3 deltaU1 deltaV1 _) = v1tex - v0tex
+                (V3 deltaU2 deltaV2 _) = v2tex - v0tex
+
+                f = 1.0 / (deltaU1 * deltaV2 - deltaU2 * deltaV1)
+
+                tx = f * (deltaV2 * edge1x - deltaV1 * edge2x)
+                ty = f * (deltaV2 * edge1y - deltaV1 * edge2y)
+                tz = f * (deltaV2 * edge1z - deltaV1 * edge2z)
+
+                btx = f * (-deltaU2 * edge1x - deltaU1 * edge2x)
+                bty = f * (-deltaU2 * edge1y - deltaU1 * edge2y)
+                btz = f * (-deltaU2 * edge1z - deltaU1 * edge2z)
 
 validVector :: V3 Float -> Bool
 validVector v = v == v
