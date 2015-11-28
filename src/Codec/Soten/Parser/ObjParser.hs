@@ -50,7 +50,7 @@ validate (Left e) = throw $ DeadlyImporterError $
 modelTokens :: Parser [Token]
 modelTokens = many $ choice $ map try availableTags
 
--- | A list of supported tags parsers.  availableTags :: [Parser Token]
+-- | A list of supported tags parsers.
 availableTags :: [Parser Token]
 availableTags = special ++ map lexeme lexemed
   where
@@ -71,7 +71,7 @@ vertexTexture = string "vt" >> VertexTexture <$> floatS <*> floatS -- <*> option
 
 -- | Parses `o` tag.
 object :: Parser Token
-object = char 'o' *> whitespace *> (Object <$> manyTill anyChar newline)
+object = char 'o' *> whitespace *> (Object <$> manyTill anyChar endOfLine)
 
 -- | Parses `f` tag.
 face :: Parser Token
@@ -125,7 +125,7 @@ whitespace = skipMany1 (oneOf " \t")
 
 -- | Skips all characters up to end of line.
 eol :: Parser ()
-eol = void $ manyTill anyChar newline
+eol = void $ manyTill anyChar endOfLine
 
 -- | A parser of unimplemented / unsupported tags.
 ignoreTags :: Parser ()
@@ -141,7 +141,7 @@ lexeme p = lexemePrefix *> p <* eol
 
 -- | Ignores shit before the actual tag.
 lexemePrefix :: Parser [()] -- TODO: Fix signature.
-lexemePrefix = many (comment <|> ignoreTags)
+lexemePrefix = many (void endOfLine <|> comment <|> ignoreTags)
 
 -- | A comment, ignore the whole line.
 comment :: Parser ()

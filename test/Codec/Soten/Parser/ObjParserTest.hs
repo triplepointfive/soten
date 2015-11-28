@@ -10,7 +10,9 @@ quad, cube :: String
 quad = unlines
     [ "# Blender v2.57 (sub 0) OBJ File: ''"
     , "# www.blender.org"
+    , ""
     , "o Cube_Cube.001"
+    , ""
     , "v -1.000000 1.000000 0.000000  "
     , "v 1.000000 1.000000 0.000000   "
     , "v -1.000000 -1.000000 0.000000 "
